@@ -121,7 +121,6 @@ namespace ShowHair
                             drawHair = !SettingsController.HatsThatHideHair.Contains(ap.def);
                             if (drawHair)
                                 hatLoc.y += 0.0328125022f;
-                            break;
                         }
                     }
                     if (drawHair || (portrait && Prefs.HatsOnlyOnMap))
@@ -142,7 +141,6 @@ namespace ShowHair
                             Material material2 = apparelGraphics[j].graphic.MatAt(bodyFacing, null);
                             material2 = __instance.graphics.flasher.GetDamagedMat(material2);
                             GenDraw.DrawMeshNowOrLater(mesh3, hatLoc, quat, material2, portrait);
-                            break;
                         }
                     }
                 }
@@ -157,7 +155,6 @@ namespace ShowHair
                         Material material3 = apparelGraphicRecord.graphic.MatAt(bodyFacing, null);
                         material3 = __instance.graphics.flasher.GetDamagedMat(material3);
                         GenDraw.DrawMeshNowOrLater(mesh, vector, quat, material3, portrait);
-                        break;
                     }
                 }
             }
