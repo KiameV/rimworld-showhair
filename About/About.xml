@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+    <name>Show Hair with Per-Hat Toggle</name>
+    <author>Kiame Vivacity</author>
+    <targetVersion>0.17.1557</targetVersion>
+	<url></url>
+    <description>Show hair for all hats.
+	
+Includes a toggle in Mod Settings to have selected hats hide the hair.</description>
+</ModMetaData>
