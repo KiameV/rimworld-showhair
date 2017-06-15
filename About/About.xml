@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ModMetaData>
-    <name>Show Hair with Per-Hat Toggle</name>
+    <name>Show Hair or Hide Hats</name>
     <author>Kiame Vivacity</author>
     <targetVersion>0.17.1557</targetVersion>
 	<url></url>
-    <description>Show hair for all hats.
-	
-Includes a toggle in Mod Settings to have selected hats hide the hair.</description>
+    <description>Show hair for all hats or select which hats do hide hair in Mod Settings.
+
+Hide all hats from Mod Settings.
+
+Thanks to "YouAllJilao" for creating "Headgear Frame" and "Vaniat" for supporting it. That mod gave me the idea to do this mod.
+</description>
 </ModMetaData>
