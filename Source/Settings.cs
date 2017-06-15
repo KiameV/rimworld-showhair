@@ -50,7 +50,7 @@ namespace ShowHair
 
         public override string SettingsCategory()
         {
-            return "Show Hair with Hats";
+            return "ShowHair.ShowHair".Translate();
         }
 
         public override void DoSettingsWindowContents(Rect rect)
@@ -58,7 +58,7 @@ namespace ShowHair
             GUI.BeginGroup(new Rect(0, 60, 602, 450));
 
             GUI.BeginGroup(new Rect(0, 0, 140, 30));
-            Widgets.Label(new Rect(0, 1, 100, 22), "Hide All Hats:");
+            Widgets.Label(new Rect(0, 1, 100, 22), "ShowHair.HideAllHats".Translate() + ":");
             bool b = HideAllHats;
             Widgets.Checkbox(new Vector2(120, 0), ref b);
             HideAllHats = b;
@@ -69,7 +69,7 @@ namespace ShowHair
                 Rect outer = new Rect(0, 80, 600, 400);
                 GUI.BeginGroup(outer);
                 Text.Font = GameFont.Medium;
-                Widgets.Label(new Rect(0, 0, 500, 40), "Select the hats that will hide hair when worn");
+                Widgets.Label(new Rect(0, 0, 500, 40), "ShowHair.SelectHatsWhichHideHair".Translate());
                 Widgets.BeginScrollView(new Rect(0, 0, 584, 500), ref scrollPosition, new Rect(0, 0, 600, ApparelThatHidesHats.Count * 30));
                 Text.Font = GameFont.Small;
 
@@ -111,7 +111,6 @@ namespace ShowHair
     class Settings : ModSettings
     {
         internal static List<string> LoadedHairHideHats = new List<string>();
-        private const char delimiter = '^';
         public override void ExposeData()
         {
             base.ExposeData();
