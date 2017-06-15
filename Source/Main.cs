@@ -114,13 +114,14 @@ namespace ShowHair
                 if (bodyDrawType != RotDrawMode.Dessicated && !headStump)
                 {
                     bool drawHair = true;
-                    foreach (Apparel ap in pawn.apparel.WornApparel)
+                    if (!SettingsController.HideAllHats)
                     {
-                        if (ap.def.apparel.LastLayer == ApparelLayer.Overhead)
+                        foreach (Apparel ap in pawn.apparel.WornApparel)
                         {
-                            drawHair = !SettingsController.HatsThatHideHair.Contains(ap.def);
-                            if (drawHair)
-                                hatLoc.y += 0.0328125022f;
+                            if (ap.def.apparel.LastLayer == ApparelLayer.Overhead)
+                            {
+                                drawHair = !SettingsController.HatsThatHideHair.Contains(ap.def);
+                            }
                         }
                     }
                     if (drawHair || (portrait && Prefs.HatsOnlyOnMap))
@@ -130,7 +131,7 @@ namespace ShowHair
                         GenDraw.DrawMeshNowOrLater(mesh4, hairLoc, quat, mat, portrait);
                     }
                 }
-                if (!portrait || !Prefs.HatsOnlyOnMap)
+                if (!SettingsController.HideAllHats && (!portrait || !Prefs.HatsOnlyOnMap))
                 {
                     Mesh mesh3 = __instance.graphics.HairMeshSet.MeshAt(headFacing);
                     List<ApparelGraphicRecord> apparelGraphics = __instance.graphics.apparelGraphics;
@@ -140,6 +141,7 @@ namespace ShowHair
                         {
                             Material material2 = apparelGraphics[j].graphic.MatAt(bodyFacing, null);
                             material2 = __instance.graphics.flasher.GetDamagedMat(material2);
+                            hatLoc.y += 0.0328125022f * (j + 1);
                             GenDraw.DrawMeshNowOrLater(mesh3, hatLoc, quat, material2, portrait);
                         }
                     }

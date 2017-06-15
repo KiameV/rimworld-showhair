@@ -35,9 +35,12 @@ namespace ShowHair
 
         public static HashSet<ThingDef> HatsThatHideHair;
 
+        public static bool HideAllHats { get; internal set;}
+
         static SettingsController()
         {
             HatsThatHideHair = new HashSet<ThingDef>();
+            HideAllHats = false;
         }
 
         public SettingsController(ModContentPack content) : base(content)
@@ -52,43 +55,56 @@ namespace ShowHair
 
         public override void DoSettingsWindowContents(Rect rect)
         {
-            Rect outer = new Rect(0, 60, 600, 400);
-            GUI.BeginGroup(outer);
-            Text.Font = GameFont.Medium;
-            Widgets.Label(new Rect(0, 0, 500, 40), "Select the hats that will hide hair when worn");
-            Widgets.BeginScrollView(outer, ref scrollPosition, new Rect(0, 0, 595, ApparelThatHidesHats.Count * 30));
-            Text.Font = GameFont.Small;
+            GUI.BeginGroup(new Rect(0, 60, 602, 450));
 
-            int index = 0;
-            Dictionary<ThingDef, bool> changes = new Dictionary<ThingDef, bool>();
-            foreach (KeyValuePair<ThingDef, bool> kv in ApparelThatHidesHats)
-            {
-                int y = index * 30 + 50;
-                ++index;
-                Widgets.Label(new Rect(0, y, 200, 22), kv.Key.label + ":");
-
-                bool b = kv.Value;
-                Widgets.Checkbox(new Vector2(220, y - 1), ref b);
-                if (b != kv.Value)
-                {
-                    changes.Add(kv.Key, b);
-                }
-            }
-            Widgets.EndScrollView();
+            GUI.BeginGroup(new Rect(0, 0, 140, 30));
+            Widgets.Label(new Rect(0, 1, 100, 22), "Hide All Hats:");
+            bool b = HideAllHats;
+            Widgets.Checkbox(new Vector2(120, 0), ref b);
+            HideAllHats = b;
             GUI.EndGroup();
 
-            foreach(KeyValuePair<ThingDef, bool> kv in changes)
+            if (!HideAllHats)
             {
-                apparelThatHidesHats[kv.Key] = kv.Value;
-                if (kv.Value)
+                Rect outer = new Rect(0, 80, 600, 400);
+                GUI.BeginGroup(outer);
+                Text.Font = GameFont.Medium;
+                Widgets.Label(new Rect(0, 0, 500, 40), "Select the hats that will hide hair when worn");
+                Widgets.BeginScrollView(new Rect(0, 0, 584, 500), ref scrollPosition, new Rect(0, 0, 600, ApparelThatHidesHats.Count * 30));
+                Text.Font = GameFont.Small;
+
+                int index = 0;
+                Dictionary<ThingDef, bool> changes = new Dictionary<ThingDef, bool>();
+                foreach (KeyValuePair<ThingDef, bool> kv in ApparelThatHidesHats)
                 {
-                    HatsThatHideHair.Add(kv.Key);
+                    int y = index * 30 + 50;
+                    ++index;
+                    Widgets.Label(new Rect(0, y, 200, 22), kv.Key.label + ":");
+
+                    b = kv.Value;
+                    Widgets.Checkbox(new Vector2(220, y - 1), ref b);
+                    if (b != kv.Value)
+                    {
+                        changes.Add(kv.Key, b);
+                    }
                 }
-                else
+                Widgets.EndScrollView();
+                GUI.EndGroup();
+
+                foreach (KeyValuePair<ThingDef, bool> kv in changes)
                 {
-                    HatsThatHideHair.Remove(kv.Key);
+                    apparelThatHidesHats[kv.Key] = kv.Value;
+                    if (kv.Value)
+                    {
+                        HatsThatHideHair.Add(kv.Key);
+                    }
+                    else
+                    {
+                        HatsThatHideHair.Remove(kv.Key);
+                    }
                 }
             }
+            GUI.EndGroup();
         }
     }
 
@@ -110,6 +126,13 @@ namespace ShowHair
             }
             
             Scribe_Collections.Look(ref LoadedHairHideHats, "ShowHair.HatsThatHideHair", LookMode.Value, new Object[0]);
+
+            bool hideAllHats = SettingsController.HideAllHats;
+            Scribe_Values.Look<bool>(ref hideAllHats, "ShowHair.HideAllHats", false, false);
+            if (Scribe.mode == LoadSaveMode.LoadingVars)
+            {
+                SettingsController.HideAllHats = hideAllHats;
+            }
         }
     }
 }
