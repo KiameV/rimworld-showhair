@@ -44,6 +44,7 @@ namespace ShowHair
         public static bool Prefix(PawnRenderer __instance, Vector3 rootLoc, Quaternion quat, bool renderBody, Rot4 bodyFacing, Rot4 headFacing, RotDrawMode bodyDrawType, bool portrait, bool headStump)
         {
             GetReflections();
+            SettingsController.InitializeAllHats();
 
             if (!__instance.graphics.AllResolved)
             {

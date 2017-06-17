@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 using Verse;
 
@@ -8,44 +7,37 @@ namespace ShowHair
     public class SettingsController : Mod
     {
         private Vector2 scrollPosition = new Vector2(0, 0);
-        private static Dictionary<ThingDef, bool> apparelThatHidesHats = null;
-        public static Dictionary<ThingDef, bool> ApparelThatHidesHats
-        {
-            get
-            {
-                if (apparelThatHidesHats == null || apparelThatHidesHats.Count == 0)
-                {
-                    HatsThatHideHair.Clear();
-                    Dictionary<ThingDef, bool> d = new Dictionary<ThingDef, bool>();
-                    foreach (ThingDef td in DefDatabase<ThingDef>.AllDefs)
-                    {
-                        if (td.apparel != null && td.apparel.LastLayer == RimWorld.ApparelLayer.Overhead)
-                        {
-                            bool hide = Settings.LoadedHairHideHats.Contains(td.defName);
-                            d.Add(td, hide);
-                            if (hide)
-                                HatsThatHideHair.Add(td);
-                        }
-                    }
-                    apparelThatHidesHats = d;
-                }
-                return apparelThatHidesHats;
-            }
-        }
 
-        public static HashSet<ThingDef> HatsThatHideHair;
+        internal static Dictionary<ThingDef, bool> AllHatsAndDoHidesHair = new Dictionary<ThingDef, bool>();
 
+        public static HashSet<ThingDef> HatsThatHideHair = new HashSet<ThingDef>();
         public static bool HideAllHats { get; internal set;}
 
         static SettingsController()
         {
-            HatsThatHideHair = new HashSet<ThingDef>();
             HideAllHats = false;
         }
 
         public SettingsController(ModContentPack content) : base(content)
         {
             base.GetSettings<Settings>();
+        }
+
+        internal static void InitializeAllHats()
+        {
+            if (AllHatsAndDoHidesHair.Count == 0)
+            {
+                foreach (ThingDef td in DefDatabase<ThingDef>.AllDefs)
+                {
+                    if (td.apparel != null && td.apparel.LastLayer == RimWorld.ApparelLayer.Overhead)
+                    {
+                        bool hide = Settings.LoadedHairHideHats.Contains(td.defName);
+                        AllHatsAndDoHidesHair.Add(td, hide);
+                        if (hide)
+                            HatsThatHideHair.Add(td);
+                    }
+                }
+            }
         }
 
         public override string SettingsCategory()
@@ -55,6 +47,7 @@ namespace ShowHair
 
         public override void DoSettingsWindowContents(Rect rect)
         {
+            InitializeAllHats();
             GUI.BeginGroup(new Rect(0, 60, 602, 450));
 
             GUI.BeginGroup(new Rect(0, 0, 140, 30));
@@ -70,12 +63,12 @@ namespace ShowHair
                 GUI.BeginGroup(outer);
                 Text.Font = GameFont.Medium;
                 Widgets.Label(new Rect(0, 0, 500, 40), "ShowHair.SelectHatsWhichHideHair".Translate());
-                Widgets.BeginScrollView(new Rect(0, 0, 584, 500), ref scrollPosition, new Rect(0, 0, 600, ApparelThatHidesHats.Count * 30));
+                Widgets.BeginScrollView(new Rect(0, 0, 584, 500), ref scrollPosition, new Rect(0, 0, 600, AllHatsAndDoHidesHair.Count * 30));
                 Text.Font = GameFont.Small;
 
                 int index = 0;
                 Dictionary<ThingDef, bool> changes = new Dictionary<ThingDef, bool>();
-                foreach (KeyValuePair<ThingDef, bool> kv in ApparelThatHidesHats)
+                foreach (KeyValuePair<ThingDef, bool> kv in AllHatsAndDoHidesHair)
                 {
                     int y = index * 30 + 50;
                     ++index;
@@ -93,7 +86,7 @@ namespace ShowHair
 
                 foreach (KeyValuePair<ThingDef, bool> kv in changes)
                 {
-                    apparelThatHidesHats[kv.Key] = kv.Value;
+                    AllHatsAndDoHidesHair[kv.Key] = kv.Value;
                     if (kv.Value)
                     {
                         HatsThatHideHair.Add(kv.Key);
@@ -110,7 +103,7 @@ namespace ShowHair
 
     class Settings : ModSettings
     {
-        internal static List<string> LoadedHairHideHats = new List<string>();
+        internal static List<string> LoadedHairHideHats;
         public override void ExposeData()
         {
             base.ExposeData();
@@ -128,6 +121,7 @@ namespace ShowHair
 
             bool hideAllHats = SettingsController.HideAllHats;
             Scribe_Values.Look<bool>(ref hideAllHats, "ShowHair.HideAllHats", false, false);
+
             if (Scribe.mode == LoadSaveMode.LoadingVars)
             {
                 SettingsController.HideAllHats = hideAllHats;
