@@ -103,21 +103,30 @@ namespace ShowHair
 
     class Settings : ModSettings
     {
-        internal static List<string> LoadedHairHideHats;
+        private static List<string> loadedHairHideHats = new List<string>(0);
+        internal static List<string> LoadedHairHideHats
+        {
+            get
+            {
+                if (loadedHairHideHats == null)
+                    return new List<string>(0);
+                return loadedHairHideHats;
+            }
+        }
         public override void ExposeData()
         {
             base.ExposeData();
 
             if (Scribe.mode == LoadSaveMode.Saving)
             {
-                LoadedHairHideHats = new List<string>(SettingsController.HatsThatHideHair.Count);
+                loadedHairHideHats = new List<string>(SettingsController.HatsThatHideHair.Count);
                 foreach (ThingDef d in SettingsController.HatsThatHideHair)
                 {
-                    LoadedHairHideHats.Add(d.defName);
+                    loadedHairHideHats.Add(d.defName);
                 }
             }
             
-            Scribe_Collections.Look(ref LoadedHairHideHats, "ShowHair.HatsThatHideHair", LookMode.Value, new Object[0]);
+            Scribe_Collections.Look(ref loadedHairHideHats, "ShowHair.HatsThatHideHair", LookMode.Value, new Object[0]);
 
             bool hideAllHats = SettingsController.HideAllHats;
             Scribe_Values.Look<bool>(ref hideAllHats, "ShowHair.HideAllHats", false, false);
