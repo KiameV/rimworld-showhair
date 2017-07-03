@@ -53,6 +53,7 @@ namespace ShowHair
 
             Pawn pawn = (Pawn)PawnFieldInfo?.GetValue(__instance);
             Mesh mesh = null;
+            float maxY = rootLoc.y;
             if (pawn != null && renderBody)
             {
                 Vector3 loc = rootLoc;
@@ -111,7 +112,6 @@ namespace ShowHair
                 }
                 Vector3 hairLoc = rootLoc + b;
                 hairLoc.y += 0.0328125022f;
-                Vector3 hatLoc = hairLoc;
                 if (bodyDrawType != RotDrawMode.Dessicated && !headStump)
                 {
                     bool drawHair = true;
@@ -119,7 +119,9 @@ namespace ShowHair
                     {
                         foreach (Apparel ap in pawn.apparel.WornApparel)
                         {
-                            if (ap.def.apparel.LastLayer == ApparelLayer.Overhead)
+                            ApparelProperties p = ap.def.apparel;
+                            if (p.LastLayer == ApparelLayer.Overhead && 
+                                !String.IsNullOrEmpty(p.wornGraphicPath))
                             {
                                 drawHair = !SettingsController.HatsThatHideHair.Contains(ap.def);
                             }
@@ -142,7 +144,8 @@ namespace ShowHair
                         {
                             Material material2 = apparelGraphics[j].graphic.MatAt(bodyFacing, null);
                             material2 = __instance.graphics.flasher.GetDamagedMat(material2);
-                            hatLoc.y += 0.0328125022f * (j + 1);
+                            Vector3 hatLoc = hairLoc;
+                            hatLoc.y += 0.001f * (j + 1);
                             GenDraw.DrawMeshNowOrLater(mesh3, hatLoc, quat, material2, portrait);
                         }
                     }

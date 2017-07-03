@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using Verse;
 
@@ -29,7 +30,9 @@ namespace ShowHair
             {
                 foreach (ThingDef td in DefDatabase<ThingDef>.AllDefs)
                 {
-                    if (td.apparel != null && td.apparel.LastLayer == RimWorld.ApparelLayer.Overhead)
+                    if (td.apparel != null && 
+                        td.apparel.LastLayer == RimWorld.ApparelLayer.Overhead &&
+                        !String.IsNullOrEmpty(td.apparel.wornGraphicPath))
                     {
                         bool hide = Settings.LoadedHairHideHats.Contains(td.defName);
                         AllHatsAndDoHidesHair.Add(td, hide);
@@ -63,14 +66,14 @@ namespace ShowHair
                 GUI.BeginGroup(outer);
                 Text.Font = GameFont.Medium;
                 Widgets.Label(new Rect(0, 0, 500, 40), "ShowHair.SelectHatsWhichHideHair".Translate());
-                Widgets.BeginScrollView(new Rect(0, 0, 584, 500), ref scrollPosition, new Rect(0, 0, 600, AllHatsAndDoHidesHair.Count * 30));
+                Widgets.BeginScrollView(new Rect(0, 50, 500, 300), ref scrollPosition, new Rect(0, 0, 484, AllHatsAndDoHidesHair.Count * 30 + 40));
                 Text.Font = GameFont.Small;
 
                 int index = 0;
                 Dictionary<ThingDef, bool> changes = new Dictionary<ThingDef, bool>();
                 foreach (KeyValuePair<ThingDef, bool> kv in AllHatsAndDoHidesHair)
                 {
-                    int y = index * 30 + 50;
+                    int y = index * 30;
                     ++index;
                     Widgets.Label(new Rect(0, y, 200, 22), kv.Key.label + ":");
 
@@ -126,7 +129,11 @@ namespace ShowHair
                 }
             }
             
-            Scribe_Collections.Look(ref loadedHairHideHats, "ShowHair.HatsThatHideHair", LookMode.Value, new Object[0]);
+            Scribe_Collections.Look(ref loadedHairHideHats, "ShowHair.HatsThatHideHair", LookMode.Value);
+            if (loadedHairHideHats == null)
+            {
+                loadedHairHideHats = new List<string>(0);
+            }
 
             bool hideAllHats = SettingsController.HideAllHats;
             Scribe_Values.Look<bool>(ref hideAllHats, "ShowHair.HideAllHats", false, false);
