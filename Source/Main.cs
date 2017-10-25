@@ -40,11 +40,197 @@ namespace ShowHair
                 PawnHeadOverlaysFieldInfo = PawnRendererType.GetField("statusOverlays", BindingFlags.NonPublic | BindingFlags.Instance);
             }
         }
-
+#if DEBUG
+        static int count = 0;
+        static bool first = true;
+        const int COUNT_FOR_LOG = 120;
+#endif
         public static bool Prefix(PawnRenderer __instance, Vector3 rootLoc, Quaternion quat, bool renderBody, Rot4 bodyFacing, Rot4 headFacing, RotDrawMode bodyDrawType, bool portrait, bool headStump)
         {
             GetReflections();
-            SettingsController.InitializeAllHats();
+            
+            if (!__instance.graphics.AllResolved)
+            {
+                __instance.graphics.ResolveAllGraphics();
+            }
+
+            Pawn pawn = PawnFieldInfo.GetValue(__instance) as Pawn;
+#if DEBUG
+            bool isPawn = pawn.NameStringShort.EqualsIgnoreCase("takuma");
+            if (isPawn)
+            {
+                ++count;
+                if (first)
+                {
+                    first = false;
+                    Log.Warning("Takuma found");
+                }
+            }
+#endif
+            Mesh mesh = null;
+            if (pawn != null && renderBody)
+            {
+                Vector3 loc = rootLoc;
+                loc.y += 0.0078125f;
+                if (bodyDrawType == RotDrawMode.Dessicated && !pawn.RaceProps.Humanlike && __instance.graphics.dessicatedGraphic != null && !portrait)
+                {
+                    __instance.graphics.dessicatedGraphic.Draw(loc, bodyFacing, pawn, 0f);
+                }
+                else
+                {
+                    if (pawn.RaceProps.Humanlike)
+                    {
+                        mesh = MeshPool.humanlikeBodySet.MeshAt(bodyFacing);
+                    }
+                    else
+                    {
+                        mesh = __instance.graphics.nakedGraphic.MeshAt(bodyFacing);
+                    }
+                    List<Material> list = __instance.graphics.MatsBodyBaseAt(bodyFacing, bodyDrawType);
+                    for (int i = 0; i < list.Count; i++)
+                    {
+                        Material damagedMat = __instance.graphics.flasher.GetDamagedMat(list[i]);
+                        GenDraw.DrawMeshNowOrLater(mesh, loc, quat, damagedMat, portrait);
+                        loc.y += 0.00390625f;
+                    }
+                    if (bodyDrawType == RotDrawMode.Fresh)
+                    {
+                        Vector3 drawLoc = rootLoc;
+                        drawLoc.y += 0.01953125f;
+                        PawnWoundDrawer wound = WoundOverlayFieldInfo.GetValue(__instance) as PawnWoundDrawer;
+                        wound?.RenderOverBody(drawLoc, mesh, quat, portrait);
+                    }
+                }
+            }
+            Vector3 vector = rootLoc;
+            Vector3 a = rootLoc;
+            if (bodyFacing != Rot4.North)
+            {
+                a.y += 0.02734375f;
+                vector.y += 0.0234375f;
+            }
+            else
+            {
+                a.y += 0.0234375f;
+                vector.y += 0.02734375f;
+            }
+            if (__instance.graphics.headGraphic != null)
+            {
+                Vector3 b = quat * __instance.BaseHeadOffsetAt(headFacing);
+                Material material = __instance.graphics.HeadMatAt(headFacing, bodyDrawType, headStump);
+                if (material != null)
+                {
+                    Mesh mesh2 = MeshPool.humanlikeHeadSet.MeshAt(headFacing);
+                    GenDraw.DrawMeshNowOrLater(mesh2, a + b, quat, material, portrait);
+                }
+                Vector3 loc2 = rootLoc + b;
+                loc2.y += 0.03125f;
+                bool flag = false;
+                bool forceShowHair = false;
+                float hairLoc = 0;
+                if (!SettingsController.HideAllHats && (!portrait || !Prefs.HatsOnlyOnMap))
+                {
+                    Mesh mesh3 = __instance.graphics.HairMeshSet.MeshAt(headFacing);
+                    List<ApparelGraphicRecord> apparelGraphics = __instance.graphics.apparelGraphics;
+                    for (int j = 0; j < apparelGraphics.Count; j++)
+                    {
+                        Apparel sourceApparel = apparelGraphics[j].sourceApparel;
+                        if (sourceApparel.def.apparel.LastLayer == ApparelLayer.Overhead)
+                        {
+#if DEBUG
+                            if (isPawn && count > COUNT_FOR_LOG)
+                            {
+                                Log.Warning("Force no hair: " + SettingsController.HatsThatHideHair.Contains(sourceApparel.def));
+                            }
+#endif
+                            if (!forceShowHair)
+                            {
+                                forceShowHair = !SettingsController.HatsThatHideHair.Contains(sourceApparel.def);
+                            }
+
+                            if (!sourceApparel.def.apparel.hatRenderedFrontOfFace)
+                            {
+                                hairLoc = loc2.y;
+                                flag = true;
+                                Material material2 = apparelGraphics[j].graphic.MatAt(bodyFacing, null);
+                                material2 = __instance.graphics.flasher.GetDamagedMat(material2);
+                                GenDraw.DrawMeshNowOrLater(mesh3, loc2, quat, material2, portrait);
+                            }
+                            else
+                            {
+                                Material material3 = apparelGraphics[j].graphic.MatAt(bodyFacing, null);
+                                material3 = __instance.graphics.flasher.GetDamagedMat(material3);
+                                Vector3 loc3 = rootLoc + b;
+                                loc3.y += ((!(bodyFacing == Rot4.North)) ? 0.03515625f : 0.00390625f);
+                                hairLoc = loc3.y;
+                                GenDraw.DrawMeshNowOrLater(mesh3, loc3, quat, material3, portrait);
+                            }
+                        }
+                    }
+                }
+#if DEBUG
+                if (isPawn && count > COUNT_FOR_LOG)
+                {
+                    Log.Warning("HideAllHats: " + SettingsController.HideAllHats + " forceShowHair: " + forceShowHair + " flag: " + flag + " bodyDrawType: " + bodyDrawType + " headStump: " + headStump);
+                }
+#endif
+
+                if (hairLoc > 0)
+                {
+                    loc2.y = hairLoc - 0.01f;
+                }
+                
+                if (SettingsController.HideAllHats || forceShowHair || (!flag && bodyDrawType != RotDrawMode.Dessicated && !headStump))
+                {
+                    Mesh mesh4 = __instance.graphics.HairMeshSet.MeshAt(headFacing);
+                    Material mat = __instance.graphics.HairMatAt(headFacing);
+                    GenDraw.DrawMeshNowOrLater(mesh4, loc2, quat, mat, portrait);
+                }
+            }
+            if (renderBody)
+            {
+                for (int k = 0; k < __instance.graphics.apparelGraphics.Count; k++)
+                {
+                    ApparelGraphicRecord apparelGraphicRecord = __instance.graphics.apparelGraphics[k];
+                    if (apparelGraphicRecord.sourceApparel.def.apparel.LastLayer == ApparelLayer.Shell)
+                    {
+                        Material material4 = apparelGraphicRecord.graphic.MatAt(bodyFacing, null);
+                        material4 = __instance.graphics.flasher.GetDamagedMat(material4);
+                        GenDraw.DrawMeshNowOrLater(mesh, vector, quat, material4, portrait);
+                    }
+                }
+            }
+            if (!portrait && pawn.RaceProps.Animal && pawn.inventory != null && pawn.inventory.innerContainer.Count > 0 && __instance.graphics.packGraphic != null)
+            {
+                Graphics.DrawMesh(mesh, vector, quat, __instance.graphics.packGraphic.MatAt(bodyFacing, null), 0);
+            }
+            if (!portrait)
+            {
+                DrawEquipmentMethodInfo?.Invoke(__instance, new object[] { rootLoc });
+                if (pawn.apparel != null)
+                {
+                    List<Apparel> wornApparel = pawn.apparel.WornApparel;
+                    for (int l = 0; l < wornApparel.Count; l++)
+                    {
+                        wornApparel[l].DrawWornExtras();
+                    }
+                }
+                Vector3 bodyLoc = rootLoc;
+                bodyLoc.y += 0.04296875f;
+
+                PawnHeadOverlays headOverlay = PawnHeadOverlaysFieldInfo.GetValue(__instance) as PawnHeadOverlays;
+                headOverlay?.RenderStatusOverlays(bodyLoc, quat, MeshPool.humanlikeHeadSet.MeshAt(headFacing));
+            }
+
+#if DEBUG
+            if (isPawn && count > COUNT_FOR_LOG)
+            {
+                count = 0;
+            }
+#endif
+
+
+            /*SettingsController.InitializeAllHats();
 
             if (!__instance.graphics.AllResolved)
             {
@@ -185,7 +371,7 @@ namespace ShowHair
 
                 ((PawnHeadOverlays)PawnHeadOverlaysFieldInfo?.GetValue(__instance))?.
                     RenderStatusOverlays(bodyLoc, quat, MeshPool.humanlikeHeadSet.MeshAt(headFacing));
-            }
+            }*/
             return false;
         }
     }
