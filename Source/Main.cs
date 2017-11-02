@@ -60,12 +60,6 @@ namespace ShowHair
         }
         }
         }*/
-        private static bool portrait;
-        public static void Prefix(bool portrait)
-        {
-            Patch_PawnRenderer_RenderPawnInternal.portrait = portrait;
-        }
-
         public static void Postfix(PawnRenderer __instance, Vector3 rootLoc, Quaternion quat, bool renderBody, Rot4 bodyFacing, Rot4 headFacing, RotDrawMode bodyDrawType, bool portrait, bool headStump)
         {
             /*if (SettingsController.HideAllHats && __state != null)
@@ -79,7 +73,7 @@ namespace ShowHair
                 Vector3 b = quat * __instance.BaseHeadOffsetAt(headFacing);
                 Vector3 loc2 = rootLoc + b;
                 bool forceShowHair = false;
-                bool hideHats = HideHats();
+                bool hideHats = HideHats(portrait);
                 float hairLoc = 0;
                 bool flag = false;
                 List<ApparelGraphicRecord> apparelGraphics = __instance.graphics.apparelGraphics;
@@ -138,9 +132,9 @@ namespace ShowHair
             }
         }
 
-        private static bool HideHats()
+        private static bool HideHats(bool port)
         {
-            bool result = SettingsController.HideAllHats || (portrait && Prefs.HatsOnlyOnMap);
+            bool result = SettingsController.HideAllHats || (port && Prefs.HatsOnlyOnMap);
 #if DEBUG
             Log.Warning(
                 "Result: " + result +
@@ -166,19 +160,24 @@ namespace ShowHair
                 {
                     found = true;
 
-                    // Skip ldarg.s portrait (2 nop)
+                    yield return instruction;
+
                     // Skip brfalse IL_0267 (5 nop)
-                    /*for (int nop = 0; nop < 7; ++nop)
+                    /*for (int nop = 0; nop < 5; ++nop)
                     {
                         yield return new CodeInstruction(OpCodes.Nop);
                     }*/
 
                     // Call RenderHat
                     instruction = instructionList[i + 2];
+#if DEBUG
                     s(instruction, "Pre");
+#endif
                     instruction.operand = typeof(Patch_PawnRenderer_RenderPawnInternal).GetMethod(
                         nameof(Patch_PawnRenderer_RenderPawnInternal.HideHats), BindingFlags.Static | BindingFlags.NonPublic);
+#if DEBUG
                     s(instruction);
+#endif
                     yield return instruction;
                     i += 2;
                 }
