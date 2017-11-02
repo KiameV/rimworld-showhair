@@ -7,21 +7,16 @@ namespace ShowHair
 {
     public class SettingsController : Mod
     {
+        public static Dictionary<ThingDef, bool> AllHatsAndDoHidesHair = new Dictionary<ThingDef, bool>();
+        public static bool HideAllHats { get { return Settings.hideAllHats; } }
+        public static HashSet<ThingDef> HatsThatHideHair { get { return Settings.HatsThatHideHair; } }
+
+        private static Settings Settings;
         private Vector2 scrollPosition = new Vector2(0, 0);
-
-        internal static Dictionary<ThingDef, bool> AllHatsAndDoHidesHair = new Dictionary<ThingDef, bool>();
-
-        public static HashSet<ThingDef> HatsThatHideHair = new HashSet<ThingDef>();
-        public static bool HideAllHats { get; internal set;}
-
-        static SettingsController()
-        {
-            HideAllHats = false;
-        }
 
         public SettingsController(ModContentPack content) : base(content)
         {
-            base.GetSettings<Settings>();
+            Settings = base.GetSettings<Settings>();
         }
 
         internal static void InitializeAllHats()
@@ -37,7 +32,9 @@ namespace ShowHair
                         bool hide = Settings.LoadedHairHideHats.Contains(td.defName);
                         AllHatsAndDoHidesHair.Add(td, hide);
                         if (hide)
-                            HatsThatHideHair.Add(td);
+                        {
+                            Settings.HatsThatHideHair.Add(td);
+                        }
                     }
                 }
             }
@@ -55,9 +52,7 @@ namespace ShowHair
 
             GUI.BeginGroup(new Rect(0, 0, 140, 30));
             Widgets.Label(new Rect(0, 1, 100, 22), "ShowHair.HideAllHats".Translate() + ":");
-            bool b = HideAllHats;
-            Widgets.Checkbox(new Vector2(120, 0), ref b);
-            HideAllHats = b;
+            Widgets.Checkbox(new Vector2(120, 0), ref Settings.hideAllHats);
             GUI.EndGroup();
 
             if (!HideAllHats)
@@ -77,7 +72,7 @@ namespace ShowHair
                     ++index;
                     Widgets.Label(new Rect(0, y, 200, 22), kv.Key.label + ":");
 
-                    b = kv.Value;
+                    bool b = kv.Value;
                     Widgets.Checkbox(new Vector2(220, y - 1), ref b);
                     if (b != kv.Value)
                     {
@@ -92,11 +87,11 @@ namespace ShowHair
                     AllHatsAndDoHidesHair[kv.Key] = kv.Value;
                     if (kv.Value)
                     {
-                        HatsThatHideHair.Add(kv.Key);
+                        Settings.HatsThatHideHair.Add(kv.Key);
                     }
                     else
                     {
-                        HatsThatHideHair.Remove(kv.Key);
+                        Settings.HatsThatHideHair.Remove(kv.Key);
                     }
                 }
             }
@@ -106,7 +101,10 @@ namespace ShowHair
 
     class Settings : ModSettings
     {
-        private static List<string> loadedHairHideHats = new List<string>(0);
+        public static HashSet<ThingDef> HatsThatHideHair = new HashSet<ThingDef>();
+        public static bool hideAllHats = false;
+        public static List<string> loadedHairHideHats = new List<string>(0);
+
         internal static List<string> LoadedHairHideHats
         {
             get
@@ -122,8 +120,8 @@ namespace ShowHair
 
             if (Scribe.mode == LoadSaveMode.Saving)
             {
-                loadedHairHideHats = new List<string>(SettingsController.HatsThatHideHair.Count);
-                foreach (ThingDef d in SettingsController.HatsThatHideHair)
+                loadedHairHideHats = new List<string>(HatsThatHideHair.Count);
+                foreach (ThingDef d in HatsThatHideHair)
                 {
                     loadedHairHideHats.Add(d.defName);
                 }
@@ -134,14 +132,8 @@ namespace ShowHair
             {
                 loadedHairHideHats = new List<string>(0);
             }
-
-            bool hideAllHats = SettingsController.HideAllHats;
+            
             Scribe_Values.Look<bool>(ref hideAllHats, "ShowHair.HideAllHats", false, false);
-
-            if (Scribe.mode == LoadSaveMode.LoadingVars)
-            {
-                SettingsController.HideAllHats = hideAllHats;
-            }
         }
     }
 }
