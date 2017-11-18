@@ -25,49 +25,8 @@ namespace ShowHair
     [HarmonyPatch(typeof(PawnRenderer), "RenderPawnInternal", new Type[] { typeof(Vector3), typeof(Quaternion), typeof(bool), typeof(Rot4), typeof(Rot4), typeof(RotDrawMode), typeof(bool), typeof(bool) })]
     public static class Patch_PawnRenderer_RenderPawnInternal
     {
-        /*private static FieldInfo PawnFieldInfo = null;
-        private static FieldInfo EquipmentFieldInfo = null;
-
-        public static void Prefix(PawnRenderer __instance, ref ThingWithComps __state)
-        {
-        if (SettingsController.HideAllHats)
-        {
-        __state = null;
-        if (PawnFieldInfo == null)
-        {
-            PawnFieldInfo = typeof(PawnRenderer).GetField("pawn", BindingFlags.NonPublic | BindingFlags.Instance);
-            EquipmentFieldInfo = typeof(Pawn_EquipmentTracker).GetField("equipment", BindingFlags.NonPublic | BindingFlags.Instance);
-        }
-
-        Pawn pawn = PawnFieldInfo.GetValue(__instance) as Pawn;
-        if (pawn != null)
-        {
-            Log.Warning("pawn not null");
-            ThingOwner<ThingWithComps> apparel = EquipmentFieldInfo.GetValue(pawn.equipment) as ThingOwner<ThingWithComps>;
-            if (apparel != null)
-            {
-                Log.Warning("apparel not null. Count: " + apparel.Count);
-                for (int i = 0; i < apparel.Count; ++i)
-                {
-                    if (apparel[i].def.apparel.LastLayer == ApparelLayer.Overhead)
-                    {
-                        __state = apparel[i];
-                        pawn.equipment.Remove(apparel[i]);
-                        break;
-                    }
-                }
-            }
-        }
-        }
-        }*/
         public static void Postfix(PawnRenderer __instance, Vector3 rootLoc, Quaternion quat, bool renderBody, Rot4 bodyFacing, Rot4 headFacing, RotDrawMode bodyDrawType, bool portrait, bool headStump)
         {
-            /*if (SettingsController.HideAllHats && __state != null)
-            {
-                Pawn pawn = PawnFieldInfo.GetValue(__instance) as Pawn;
-                pawn.equipment.AddEquipment(__state);
-            }*/
-
             if (__instance.graphics.headGraphic != null)
             {
                 Vector3 b = quat * __instance.BaseHeadOffsetAt(headFacing);
