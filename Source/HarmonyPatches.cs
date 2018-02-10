@@ -155,12 +155,12 @@ namespace ShowHair
                     // Call RenderHat
                     instruction = instructionList[i + 2];
 #if DEBUG
-                    s(instruction, "Pre");
+                    printTranspiler(instruction, "Pre");
 #endif
                     instruction.operand = typeof(Patch_PawnRenderer_RenderPawnInternal).GetMethod(
                         nameof(Patch_PawnRenderer_RenderPawnInternal.HideHats), BindingFlags.Static | BindingFlags.NonPublic);
 #if DEBUG
-                    s(instruction);
+                    printTranspiler(instruction);
 #endif
                     yield return instruction;
                     i += 2;
@@ -170,7 +170,7 @@ namespace ShowHair
 #if DEBUG
                     if (found && first)
                     {
-                        s(instruction);
+                        printTranspiler(instruction);
                         first = false;
                     }
 #endif
@@ -183,12 +183,13 @@ namespace ShowHair
             }
         }
 
-        static void s(CodeInstruction i, string pre = "")
+#if DEBUG
+        static void printTranspiler(CodeInstruction i, string pre = "")
         {
             Log.Warning("CodeInstruction: " + pre + " opCode: " + i.opcode + " operand: " + i.operand + " labels: " + s(i.labels));
         }
 
-        static string s(IEnumerable<Label> labels)
+        static string printTranspiler(IEnumerable<Label> labels)
         {
             System.Text.StringBuilder sb = new System.Text.StringBuilder();
             if (labels == null)
@@ -212,5 +213,6 @@ namespace ShowHair
             }
             return sb.ToString();
         }
+#endif
     }
 }
