@@ -11,16 +11,21 @@ using Verse;
 namespace ShowHair
 {
     [StaticConstructorOnStartup]
-    class Main
+    class HarmonyPatches
     {
-        static Main()
+        static HarmonyPatches()
         {
             var harmony = HarmonyInstance.Create("com.showhair.rimworld.mod");
             harmony.PatchAll(Assembly.GetExecutingAssembly());
 
-            Log.Message("ShowHair: Adding Harmony Postfix to Game.InitNewGame.");
-            Log.Message("ShowHair: Adding Harmony Postfix to SavedGameLoader.LoadGameFromSaveFile.");
-            Log.Message("ShowHair: Adding Harmony Transpiler and Postfix to PawnRenderer.RenderPawnInternal.");
+            Log.Message(
+                "Show Hair Harmony Patches:" + Environment.NewLine +
+                "  Transpiler:" + Environment.NewLine +
+                "    PawnRenderer.RenderPawnInternal" + Environment.NewLine +
+                "  Postfix:" + Environment.NewLine +
+                "    PawnRenderer.RenderPawnInternal" + Environment.NewLine +
+                "    Game.InitNewGame" + Environment.NewLine +
+                "    SavedGameLoader.LoadGameFromSaveFile");
         }
     }
 
