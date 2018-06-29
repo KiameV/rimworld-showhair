@@ -9,6 +9,7 @@ namespace ShowHair
     {
         public static Dictionary<ThingDef, bool> AllHatsAndDoHidesHair = new Dictionary<ThingDef, bool>();
         public static bool HideAllHats { get { return Settings.hideAllHats; } }
+        public static bool ShowHatsOnlyWhenDrafted { get { return Settings.showHatsOnlyWhenDrafted; } }
         public static HashSet<ThingDef> HatsThatHideHair { get { return Settings.HatsThatHideHair; } }
 
         private static Settings Settings;
@@ -50,15 +51,16 @@ namespace ShowHair
             InitializeAllHats();
             GUI.BeginGroup(new Rect(0, 60, 602, 450));
 
-            GUI.BeginGroup(new Rect(0, 0, 140, 30));
-            Widgets.Label(new Rect(0, 1, 100, 22), "ShowHair.HideAllHats".Translate() + ":");
-            Widgets.Checkbox(new Vector2(120, 0), ref Settings.hideAllHats);
-            GUI.EndGroup();
+            float y = 0f;
+            Widgets.CheckboxLabeled(new Rect(0, y, 250, 22), "ShowHair.HideAllHats".Translate(), ref Settings.hideAllHats);
+            y += 30;
 
             if (!HideAllHats)
             {
-                Rect outer = new Rect(0, 80, 600, 400);
-                GUI.BeginGroup(outer);
+                Widgets.CheckboxLabeled(new Rect(0, y, 250, 22), "ShowHair.ShowHatsOnlyWhenDrafted".Translate(), ref Settings.showHatsOnlyWhenDrafted);
+                y += 40;
+
+                GUI.BeginGroup(new Rect(0, y, 600, 400));
                 Text.Font = GameFont.Medium;
                 Widgets.Label(new Rect(0, 0, 500, 40), "ShowHair.SelectHatsWhichHideHair".Translate());
                 Widgets.BeginScrollView(new Rect(0, 50, 500, 300), ref scrollPosition, new Rect(0, 0, 484, AllHatsAndDoHidesHair.Count * 30 + 40));
@@ -68,7 +70,7 @@ namespace ShowHair
                 Dictionary<ThingDef, bool> changes = new Dictionary<ThingDef, bool>();
                 foreach (KeyValuePair<ThingDef, bool> kv in AllHatsAndDoHidesHair)
                 {
-                    int y = index * 30;
+                    y = index * 30;
                     ++index;
                     Widgets.Label(new Rect(0, y, 200, 22), kv.Key.label + ":");
 
@@ -95,6 +97,10 @@ namespace ShowHair
                     }
                 }
             }
+            else
+            {
+                Settings.showHatsOnlyWhenDrafted = false;
+            }
             GUI.EndGroup();
         }
     }
@@ -103,6 +109,7 @@ namespace ShowHair
     {
         public static HashSet<ThingDef> HatsThatHideHair = new HashSet<ThingDef>();
         public static bool hideAllHats = false;
+        public static bool showHatsOnlyWhenDrafted = false;
         public static List<string> loadedHairHideHats = new List<string>(0);
 
         internal static List<string> LoadedHairHideHats
@@ -134,6 +141,7 @@ namespace ShowHair
             }
             
             Scribe_Values.Look<bool>(ref hideAllHats, "ShowHair.HideAllHats", false, false);
+            Scribe_Values.Look<bool>(ref showHatsOnlyWhenDrafted, "ShowHair.ShowHatsOnlyWhenDrafted", false, false);
         }
     }
 }

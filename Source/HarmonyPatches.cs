@@ -51,6 +51,21 @@ namespace ShowHair
     [HarmonyPatch(typeof(PawnRenderer), "RenderPawnInternal", new Type[] { typeof(Vector3), typeof(Quaternion), typeof(bool), typeof(Rot4), typeof(Rot4), typeof(RotDrawMode), typeof(bool), typeof(bool) })]
     public static class Patch_PawnRenderer_RenderPawnInternal
     {
+        private static bool isDrafted = false;
+        public static void Prefix(PawnRenderer __instance)
+        {
+            if (Settings.showHatsOnlyWhenDrafted && __instance != null)
+            {
+                isDrafted = false;
+                Pawn pawn = typeof(PawnRenderer).GetField("pawn", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(__instance) as Pawn;
+                if (pawn != null &&
+                    pawn.Faction == Faction.OfPlayer && pawn.RaceProps.Humanlike)
+                {
+                    isDrafted = pawn.Drafted;
+                }
+            }
+        }
+
         public static void Postfix(PawnRenderer __instance, Vector3 rootLoc, Quaternion quat, bool renderBody, Rot4 bodyFacing, Rot4 headFacing, RotDrawMode bodyDrawType, bool portrait, bool headStump)
         {
             if (__instance.graphics.headGraphic != null)
@@ -119,7 +134,16 @@ namespace ShowHair
 
         private static bool HideHats(bool port)
         {
-            bool result = SettingsController.HideAllHats || (port && Prefs.HatsOnlyOnMap);
+            // port is portrait
+            bool result;
+            if (Settings.showHatsOnlyWhenDrafted)
+            {
+                result = !isDrafted;
+            }
+            else
+            {
+                result = SettingsController.HideAllHats || (port && Prefs.HatsOnlyOnMap);
+            }
 #if DEBUG
             Log.Warning(
                 "Result: " + result +
