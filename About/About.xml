@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ModMetaData>
-    <name>[KV] Show Hair With Hats or Hide All Hats - A18</name>
+    <name>[KV] Show Hair With Hats or Hide All Hats - 1.0</name>
     <author>Kiame Vivacity</author>
-    <targetVersion>0.18.0</targetVersion>
+    <targetVersion>1.0.0</targetVersion>
 	<url></url>
     <description>Show hair for all hats or select which hats do hide hair in Mod Settings.
 

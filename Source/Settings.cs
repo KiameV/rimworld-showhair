@@ -26,7 +26,7 @@ namespace ShowHair
                 foreach (ThingDef td in DefDatabase<ThingDef>.AllDefs)
                 {
                     if (td.apparel != null && 
-                        td.apparel.LastLayer == RimWorld.ApparelLayer.Overhead &&
+                        td.apparel.LastLayer == RimWorld.ApparelLayerDefOf.Overhead &&
                         !String.IsNullOrEmpty(td.apparel.wornGraphicPath))
                     {
                         bool hide = Settings.LoadedHairHideHats.Contains(td.defName);

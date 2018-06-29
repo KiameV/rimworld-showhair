@@ -38,9 +38,10 @@ namespace ShowHair
         }
     }
     
-    [HarmonyPatch(typeof(SavedGameLoader), "LoadGameFromSaveFile")]
-    static class Patch_SavedGameLoader_LoadGameFromSaveFile
+    [HarmonyPatch(typeof(SavedGameLoaderNow), "LoadGameFromSaveFileNow")]
+    static class Patch_SavedGameLoader_LoadGameFromSaveFileNow
     {
+        [HarmonyPriority(Priority.Last)]
         static void Postfix()
         {
             SettingsController.InitializeAllHats();
@@ -64,7 +65,7 @@ namespace ShowHair
                 for (int j = 0; j < apparelGraphics.Count; j++)
                 {
                     Apparel sourceApparel = apparelGraphics[j].sourceApparel;
-                    if (sourceApparel.def.apparel.LastLayer == ApparelLayer.Overhead)
+                    if (sourceApparel.def.apparel.LastLayer == ApparelLayerDefOf.Overhead)
                     {
 #if DEBUG
                         if (isPawn && count > COUNT_FOR_LOG)
