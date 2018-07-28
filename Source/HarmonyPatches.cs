@@ -48,7 +48,9 @@ namespace ShowHair
         }
     }
 
-    [HarmonyPatch(typeof(PawnRenderer), "RenderPawnInternal", new Type[] { typeof(Vector3), typeof(Quaternion), typeof(bool), typeof(Rot4), typeof(Rot4), typeof(RotDrawMode), typeof(bool), typeof(bool) })]
+    [HarmonyPatch(
+        typeof(PawnRenderer), "RenderPawnInternal", 
+        new Type[] { typeof(Vector3), typeof(float), typeof(bool), typeof(Rot4), typeof(Rot4), typeof(RotDrawMode), typeof(bool), typeof(bool) })]
     public static class Patch_PawnRenderer_RenderPawnInternal
     {
         private static bool isDrafted = false;
@@ -66,11 +68,12 @@ namespace ShowHair
             }
         }
 
-        public static void Postfix(PawnRenderer __instance, Vector3 rootLoc, Quaternion quat, bool renderBody, Rot4 bodyFacing, Rot4 headFacing, RotDrawMode bodyDrawType, bool portrait, bool headStump)
+        public static void Postfix(PawnRenderer __instance, Vector3 rootLoc, float angle, bool renderBody, Rot4 bodyFacing, Rot4 headFacing, RotDrawMode bodyDrawType, bool portrait, bool headStump)
         {
             if (__instance.graphics.headGraphic != null)
             {
-                Vector3 b = quat * __instance.BaseHeadOffsetAt(headFacing);
+                Quaternion quad = Quaternion.AngleAxis(angle, Vector3.up);
+                Vector3 b = quad * __instance.BaseHeadOffsetAt(headFacing);
                 Vector3 loc2 = rootLoc + b;
                 bool forceShowHair = false;
                 bool hideHats = HideHats(portrait);
@@ -126,7 +129,7 @@ namespace ShowHair
 
                         Mesh mesh4 = __instance.graphics.HairMeshSet.MeshAt(headFacing);
                         Material mat = __instance.graphics.HairMatAt(headFacing);
-                        GenDraw.DrawMeshNowOrLater(mesh4, loc2, quat, mat, portrait);
+                        GenDraw.DrawMeshNowOrLater(mesh4, loc2, quad, mat, portrait);
                     }
                 }
             }
