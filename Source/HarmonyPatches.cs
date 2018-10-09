@@ -34,7 +34,7 @@ namespace ShowHair
     {
         static void Postfix()
         {
-            SettingsController.InitializeAllHats();
+            Settings.Initialize();
         }
     }
     
@@ -44,7 +44,7 @@ namespace ShowHair
         [HarmonyPriority(Priority.Last)]
         static void Postfix()
         {
-            SettingsController.InitializeAllHats();
+            Settings.Initialize();
         }
     }
 
@@ -53,25 +53,30 @@ namespace ShowHair
         new Type[] { typeof(Vector3), typeof(float), typeof(bool), typeof(Rot4), typeof(Rot4), typeof(RotDrawMode), typeof(bool), typeof(bool) })]
     public static class Patch_PawnRenderer_RenderPawnInternal
     {
+        private static FieldInfo PawnFI = typeof(PawnRenderer).GetField("pawn", BindingFlags.NonPublic | BindingFlags.Instance);
         private static bool isDrafted = false;
-        public static void Prefix(PawnRenderer __instance)
+        public static void Prefix(PawnRenderer __instance, ref Pawn __state)
         {
-            if (Settings.showHatsOnlyWhenDrafted && __instance != null)
+            __state = PawnFI.GetValue(__instance) as Pawn;
+            if (__state != null && Settings.ShowHatsOnlyWhenDrafted && __instance != null)
             {
                 isDrafted = false;
-                Pawn pawn = typeof(PawnRenderer).GetField("pawn", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(__instance) as Pawn;
-                if (pawn != null &&
-                    pawn.Faction == Faction.OfPlayer && pawn.RaceProps.Humanlike)
+                if (__state.Faction == Faction.OfPlayer && __state.RaceProps.Humanlike)
                 {
-                    isDrafted = pawn.Drafted;
+                    isDrafted = __state.Drafted;
                 }
             }
         }
 
-        public static void Postfix(PawnRenderer __instance, Vector3 rootLoc, float angle, bool renderBody, Rot4 bodyFacing, Rot4 headFacing, RotDrawMode bodyDrawType, bool portrait, bool headStump)
+        public static void Postfix(PawnRenderer __instance, ref Pawn __state, Vector3 rootLoc, float angle, bool renderBody, Rot4 bodyFacing, Rot4 headFacing, RotDrawMode bodyDrawType, bool portrait, bool headStump)
         {
-            if (__instance.graphics.headGraphic != null)
+            if (__state != null && __instance.graphics.headGraphic != null)
             {
+#if DEBUG
+                bool isPawn = false;
+                if (__state.Faction.def == FactionDefOf.PlayerColony || __state.Faction.def == FactionDefOf.PlayerTribe)
+                    isPawn = __state.Name.ToStringShort.Equals("Happy");
+#endif
                 Quaternion quad = Quaternion.AngleAxis(angle, Vector3.up);
                 Vector3 b = quad * __instance.BaseHeadOffsetAt(headFacing);
                 Vector3 loc2 = rootLoc + b;
@@ -85,15 +90,36 @@ namespace ShowHair
                     Apparel sourceApparel = apparelGraphics[j].sourceApparel;
                     if (sourceApparel.def.apparel.LastLayer == ApparelLayerDefOf.Overhead)
                     {
-#if DEBUG
-                        if (isPawn && count > COUNT_FOR_LOG)
+#if DEBUG && T
+                        int i = 10324;
+                        Log.ErrorOnce("---hats:", i);
+                        ++i;
+                        foreach (KeyValuePair<ThingDef, bool> kv in Settings.HatsThatHide)
                         {
-                            Log.Warning("Force no hair: " + SettingsController.HatsThatHideHair.Contains(sourceApparel.def));
+                            Log.ErrorOnce(kv.Key + "  " + kv.Value, i);
+                            ++i;
+                        }
+                        Log.ErrorOnce("---Hair:", i);
+                        ++i;
+                        foreach (KeyValuePair<HairDef, bool> kv in Settings.HairThatShows)
+                        {
+                            Log.ErrorOnce(kv.Key + "  " + kv.Value, i);
+                            ++i;
+                        }
+#endif
+#if DEBUG
+                        if (isPawn)
+                        {
+                            if (!Settings.HatsThatHide.TryGetValue(sourceApparel.def, out bool bb))
+                                bb = false;
+                            Log.Warning("Force no hair --- HatsThatHide[" + sourceApparel.def + "] = " + bb);
                         }
 #endif
                         if (!hideHats)
                         {
-                            forceShowHair = !SettingsController.HatsThatHideHair.Contains(sourceApparel.def);
+                            if (!Settings.HatsThatHide.TryGetValue(sourceApparel.def, out bool force))
+                                force = false;
+                            forceShowHair = !force;
                         }
 
                         if (!sourceApparel.def.apparel.hatRenderedFrontOfFace)
@@ -110,14 +136,14 @@ namespace ShowHair
                         }
                     }
                 }
-#if DEBUG
-                if (isPawn && count > COUNT_FOR_LOG)
+#if DEBUG && T
+                if (isPawn && pawn.Name.ToStringShort.Equals("Happy"))
                 {
-                    Log.Warning("HideAllHats: " + SettingsController.HideAllHats + " forceShowHair: " + forceShowHair + " flag: " + flag + " bodyDrawType: " + bodyDrawType + " headStump: " + headStump);
+                    Log.Warning(pawn.Name.ToStringShort + " Hair: " + pawn.story.hairDef.defName + " HideAllHats: " + Settings.HideAllHats + " forceShowHair: " + forceShowHair + " flag: " + flag + " bodyDrawType: " + bodyDrawType + " headStump: " + headStump);
                 }
 #endif
-
-                if (!flag && bodyDrawType != RotDrawMode.Dessicated && !headStump)
+                if ((!flag && bodyDrawType != RotDrawMode.Dessicated && !headStump) || 
+                    (!hideHats && Settings.HairToHide.TryGetValue(__state.story.hairDef, out bool v) && v))
                 {
                     // Hair was already rendered
                 }
@@ -125,7 +151,7 @@ namespace ShowHair
                 {
                     if (hairLoc > 0.001f)
                     {
-                         loc2.y = hairLoc - 0.001f;
+                        loc2.y = hairLoc - 0.001f;
 
                         Mesh mesh4 = __instance.graphics.HairMeshSet.MeshAt(headFacing);
                         Material mat = __instance.graphics.HairMatAt(headFacing);
@@ -135,22 +161,21 @@ namespace ShowHair
             }
         }
 
-        private static bool HideHats(bool port)
+        private static bool HideHats(bool portrait)
         {
-            // port is portrait
             bool result;
-            if (Settings.showHatsOnlyWhenDrafted)
+            if (Settings.ShowHatsOnlyWhenDrafted)
             {
                 result = !isDrafted;
             }
             else
             {
-                result = SettingsController.HideAllHats || (port && Prefs.HatsOnlyOnMap);
+                result = Settings.HideAllHats || (portrait && Prefs.HatsOnlyOnMap);
             }
-#if DEBUG
+#if DEBUG && T
             Log.Warning(
                 "Result: " + result +
-                "- Settings.HideAllHats: " + SettingsController.HideAllHats + " Portrait: " + portrait + " Prefs.HatsOnlyOnMap: " + Prefs.HatsOnlyOnMap);
+                "- Settings.HideAllHats: " + Settings.HideAllHats + " Portrait: " + portrait + " Prefs.HatsOnlyOnMap: " + Prefs.HatsOnlyOnMap);
 #endif
             return result;
         }
@@ -159,7 +184,7 @@ namespace ShowHair
         {
             MethodInfo hatsOnlyOnMap = AccessTools.Property(typeof(Prefs), nameof(Prefs.HatsOnlyOnMap)).GetGetMethod();
             List<CodeInstruction> instructionList = instructions.ToList();
-#if DEBUG
+#if DEBUG && TRANSPILER
             bool firstAfterFound = true;
 #endif
             bool found = false;
@@ -182,12 +207,12 @@ namespace ShowHair
 
                     // Call RenderHat
                     instruction = instructionList[i + 2];
-#if DEBUG
+#if DEBUG && TRANSPILER
                     printTranspiler(instruction, "Pre");
 #endif
                     instruction.operand = typeof(Patch_PawnRenderer_RenderPawnInternal).GetMethod(
                         nameof(Patch_PawnRenderer_RenderPawnInternal.HideHats), BindingFlags.Static | BindingFlags.NonPublic);
-#if DEBUG
+#if DEBUG && TRANSPILER
                     printTranspiler(instruction);
 #endif
                     yield return instruction;
@@ -195,7 +220,7 @@ namespace ShowHair
                 }
                 else
                 {
-#if DEBUG
+#if DEBUG && TRANSPILER
                     if (found && first)
                     {
                         printTranspiler(instruction);
@@ -211,7 +236,7 @@ namespace ShowHair
             }
         }
 
-#if DEBUG
+#if DEBUG && TRANSPILER
         static void printTranspiler(CodeInstruction i, string pre = "")
         {
             Log.Warning("CodeInstruction: " + pre + " opCode: " + i.opcode + " operand: " + i.operand + " labels: " + s(i.labels));

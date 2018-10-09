@@ -2,6 +2,7 @@
 <LanguageData>
 	<ShowHair.ShowHair>Show Hair</ShowHair.ShowHair>
 	<ShowHair.HideAllHats>Hide All Hats</ShowHair.HideAllHats>
-	<ShowHair.SelectHatsWhichHideHair>Select the hats that will hide hair when worn</ShowHair.SelectHatsWhichHideHair>
+	<ShowHair.SelectHatsWhichHideHair>Select hats that will hide hair</ShowHair.SelectHatsWhichHideHair>
+	<ShowHair.SelectHairThatWillBeHidden>Select hair that hats will hide</ShowHair.SelectHairThatWillBeHidden>
 	<ShowHair.ShowHatsOnlyWhenDrafted>Show Hats Only When Drafted</ShowHair.ShowHatsOnlyWhenDrafted>
 </LanguageData>

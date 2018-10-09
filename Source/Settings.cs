@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RimWorld;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Verse;
@@ -7,38 +8,13 @@ namespace ShowHair
 {
     public class SettingsController : Mod
     {
-        public static Dictionary<ThingDef, bool> AllHatsAndDoHidesHair = new Dictionary<ThingDef, bool>();
-        public static bool HideAllHats { get { return Settings.hideAllHats; } }
-        public static bool ShowHatsOnlyWhenDrafted { get { return Settings.showHatsOnlyWhenDrafted; } }
-        public static HashSet<ThingDef> HatsThatHideHair { get { return Settings.HatsThatHideHair; } }
-
-        private static Settings Settings;
+        private Settings Settings;
         private Vector2 scrollPosition = new Vector2(0, 0);
+        private Vector2 scrollPosition2 = new Vector2(0, 0);
 
         public SettingsController(ModContentPack content) : base(content)
         {
             Settings = base.GetSettings<Settings>();
-        }
-
-        internal static void InitializeAllHats()
-        {
-            if (AllHatsAndDoHidesHair.Count == 0)
-            {
-                foreach (ThingDef td in DefDatabase<ThingDef>.AllDefs)
-                {
-                    if (td.apparel != null && 
-                        td.apparel.LastLayer == RimWorld.ApparelLayerDefOf.Overhead &&
-                        !String.IsNullOrEmpty(td.apparel.wornGraphicPath))
-                    {
-                        bool hide = Settings.LoadedHairHideHats.Contains(td.defName);
-                        AllHatsAndDoHidesHair.Add(td, hide);
-                        if (hide)
-                        {
-                            Settings.HatsThatHideHair.Add(td);
-                        }
-                    }
-                }
-            }
         }
 
         public override string SettingsCategory()
@@ -48,100 +24,163 @@ namespace ShowHair
 
         public override void DoSettingsWindowContents(Rect rect)
         {
-            InitializeAllHats();
-            GUI.BeginGroup(new Rect(0, 60, 602, 450));
+            Settings.Initialize();
 
-            float y = 0f;
-            Widgets.CheckboxLabeled(new Rect(0, y, 250, 22), "ShowHair.HideAllHats".Translate(), ref Settings.hideAllHats);
+            float y = 60f;
+            Widgets.CheckboxLabeled(new Rect(0, y, 250, 22), "ShowHair.HideAllHats".Translate(), ref Settings.HideAllHats);
             y += 30;
 
-            if (!HideAllHats)
+            if (!Settings.HideAllHats)
             {
-                Widgets.CheckboxLabeled(new Rect(0, y, 250, 22), "ShowHair.ShowHatsOnlyWhenDrafted".Translate(), ref Settings.showHatsOnlyWhenDrafted);
+                Widgets.CheckboxLabeled(new Rect(0, y, 250, 22), "ShowHair.ShowHatsOnlyWhenDrafted".Translate(), ref Settings.ShowHatsOnlyWhenDrafted);
                 y += 40;
 
-                GUI.BeginGroup(new Rect(0, y, 600, 400));
-                Text.Font = GameFont.Medium;
-                Widgets.Label(new Rect(0, 0, 500, 40), "ShowHair.SelectHatsWhichHideHair".Translate());
-                Widgets.BeginScrollView(new Rect(0, 50, 500, 300), ref scrollPosition, new Rect(0, 0, 484, AllHatsAndDoHidesHair.Count * 30 + 40));
-                Text.Font = GameFont.Small;
-
-                int index = 0;
-                Dictionary<ThingDef, bool> changes = new Dictionary<ThingDef, bool>();
-                foreach (KeyValuePair<ThingDef, bool> kv in AllHatsAndDoHidesHair)
-                {
-                    y = index * 30;
-                    ++index;
-                    Widgets.Label(new Rect(0, y, 200, 22), kv.Key.label + ":");
-
-                    bool b = kv.Value;
-                    Widgets.Checkbox(new Vector2(220, y - 1), ref b);
-                    if (b != kv.Value)
-                    {
-                        changes.Add(kv.Key, b);
-                    }
-                }
-                Widgets.EndScrollView();
-                GUI.EndGroup();
-
-                foreach (KeyValuePair<ThingDef, bool> kv in changes)
-                {
-                    AllHatsAndDoHidesHair[kv.Key] = kv.Value;
-                    if (kv.Value)
-                    {
-                        Settings.HatsThatHideHair.Add(kv.Key);
-                    }
-                    else
-                    {
-                        Settings.HatsThatHideHair.Remove(kv.Key);
-                    }
-                }
+                DrawTable(0f, y, 300f, ref scrollPosition, "ShowHair.SelectHatsWhichHideHair", new List<ThingDef>(Settings.HatsThatHide.Keys), Settings.HatsThatHide);
+                DrawTable(340f, y, 300f, ref scrollPosition2, "ShowHair.SelectHairThatWillBeHidden", new List<HairDef>(Settings.HairToHide.Keys), Settings.HairToHide);
             }
             else
             {
-                Settings.showHatsOnlyWhenDrafted = false;
+                Settings.ShowHatsOnlyWhenDrafted = false;
             }
+        }
+
+        private void DrawTable<T>(float x, float y, float width, ref Vector2 scroll, string header, ICollection<T> labels, Dictionary<T, bool> items) where T : Def
+        {
+            const float ROW_HEIGHT = 28;
+            GUI.BeginGroup(new Rect(x, y, width, 400));
+            Text.Font = GameFont.Medium;
+            Widgets.Label(new Rect(0, 0, width, 40), header.Translate());
+            Widgets.BeginScrollView(new Rect(0, 50, width, 300), ref scroll, new Rect(0, 0, width - 16, items.Count * ROW_HEIGHT + 40));
+            Text.Font = GameFont.Small;
+
+            int index = 0;
+            bool b, orig;
+            foreach (T t in labels)
+            {
+                y = index * ROW_HEIGHT;
+                ++index;
+                Widgets.Label(new Rect(0, y, 200, 22), t.label + ":");
+
+                b = orig = items[t];
+                Widgets.Checkbox(new Vector2(220, y - 1), ref b);
+                if (b != orig)
+                {
+                    items[t] = b;
+                }
+            }
+            Widgets.EndScrollView();
             GUI.EndGroup();
         }
     }
 
     class Settings : ModSettings
     {
-        public static HashSet<ThingDef> HatsThatHideHair = new HashSet<ThingDef>();
-        public static bool hideAllHats = false;
-        public static bool showHatsOnlyWhenDrafted = false;
-        public static List<string> loadedHairHideHats = new List<string>(0);
+        public static bool HideAllHats = false;
+        public static bool ShowHatsOnlyWhenDrafted = false;
 
-        internal static List<string> LoadedHairHideHats
-        {
-            get
-            {
-                if (loadedHairHideHats == null)
-                    return new List<string>(0);
-                return loadedHairHideHats;
-            }
-        }
+        public static Dictionary<ThingDef, bool> HatsThatHide = new Dictionary<ThingDef, bool>();
+        public static Dictionary<HairDef, bool> HairToHide = new Dictionary<HairDef, bool>();
+
+        private static List<string> hatsThatHide = null;
+        private static List<string> hairToHide = null;
+
         public override void ExposeData()
         {
             base.ExposeData();
 
             if (Scribe.mode == LoadSaveMode.Saving)
             {
-                loadedHairHideHats = new List<string>(HatsThatHideHair.Count);
-                foreach (ThingDef d in HatsThatHideHair)
+                hatsThatHide = new List<string>();
+                foreach (KeyValuePair<ThingDef, bool> kv in HatsThatHide)
+                    if (kv.Value)
+                        hatsThatHide.Add(kv.Key.defName);
+
+                hairToHide = new List<string>();
+                foreach (KeyValuePair<HairDef, bool> kv in HairToHide)
+                    if (kv.Value)
+                        hairToHide.Add(kv.Key.defName);
+            }
+
+            Scribe_Collections.Look(ref hairToHide, "HairToHide", LookMode.Value);
+            Scribe_Collections.Look(ref hatsThatHide, "HatsThatHide", LookMode.Value);
+            Scribe_Values.Look<bool>(ref HideAllHats, "HideAllHats", false, false);
+            Scribe_Values.Look<bool>(ref ShowHatsOnlyWhenDrafted, "ShowHatsOnlyWhenDrafted", false, false);
+
+            if (Scribe.mode == LoadSaveMode.Saving)
+            {
+                hatsThatHide.Clear();
+                hatsThatHide = null;
+                hairToHide.Clear();
+                hairToHide = null;
+            }
+        }
+
+        private static bool isInitialized = false;
+        internal static void Initialize()
+        {
+            int defCount = 0;
+            if (!isInitialized)
+            {
+                foreach (ThingDef d in DefDatabase<ThingDef>.AllDefs)
                 {
-                    loadedHairHideHats.Add(d.defName);
+                    ++defCount;
+
+                    if (d.apparel != null &&
+                        d.apparel.LastLayer == RimWorld.ApparelLayerDefOf.Overhead &&
+                        !String.IsNullOrEmpty(d.apparel.wornGraphicPath))
+                    {
+                        bool selected = false;
+                        if (hatsThatHide != null)
+                        {
+                            foreach (string s in hatsThatHide)
+                            {
+                                if (s.Equals(d.defName))
+                                {
+                                    selected = true;
+                                    break;
+                                }
+                            }
+                        }
+                        HatsThatHide[d] = selected;
+                    }
+                }
+
+                foreach (HairDef d in DefDatabase<HairDef>.AllDefs)
+                {
+                    ++defCount;
+                    bool selected = false;
+                    if (hairToHide != null)
+                    {
+                        foreach (string s in hairToHide)
+                        {
+                            if (s.Equals(d.defName))
+                            {
+                                selected = true;
+                                break;
+                            }
+                        }
+                    }
+                    HairToHide[d] = selected;
+                }
+
+                if (defCount > 0)
+                    isInitialized = true;
+
+                if (isInitialized)
+                {
+                    if (hairToHide != null)
+                    {
+                        hairToHide.Clear();
+                        hairToHide = null;
+                    }
+
+                    if (hatsThatHide != null)
+                    {
+                        hatsThatHide.Clear();
+                        hatsThatHide = null;
+                    }
                 }
             }
-            
-            Scribe_Collections.Look(ref loadedHairHideHats, "ShowHair.HatsThatHideHair", LookMode.Value);
-            if (loadedHairHideHats == null)
-            {
-                loadedHairHideHats = new List<string>(0);
-            }
-            
-            Scribe_Values.Look<bool>(ref hideAllHats, "ShowHair.HideAllHats", false, false);
-            Scribe_Values.Look<bool>(ref showHatsOnlyWhenDrafted, "ShowHair.ShowHatsOnlyWhenDrafted", false, false);
         }
     }
 }
