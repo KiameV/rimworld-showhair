@@ -26,16 +26,17 @@ namespace ShowHair
                 "    PawnRenderer.RenderPawnInternal" + Environment.NewLine +
                 "    Game.InitNewGame" + Environment.NewLine +
                 "    SavedGameLoader.LoadGameFromSaveFile");
-        }
-    }
+		}
+	}
 
-    [HarmonyPatch(typeof(Game), "InitNewGame")]
+	[HarmonyPatch(typeof(Game), "InitNewGame")]
     static class Patch_Game_InitNewGame
     {
         static void Postfix()
         {
             Settings.Initialize();
-        }
+			Patch_PawnRenderer_RenderPawnInternal.Initialize();
+		}
     }
     
     [HarmonyPatch(typeof(SavedGameLoaderNow), "LoadGameFromSaveFileNow")]
@@ -45,7 +46,9 @@ namespace ShowHair
         static void Postfix()
         {
             Settings.Initialize();
-        }
+			Patch_PawnRenderer_RenderPawnInternal.Initialize();
+
+		}
     }
 
     [HarmonyPatch(
@@ -55,6 +58,42 @@ namespace ShowHair
     {
         private static FieldInfo PawnFI = typeof(PawnRenderer).GetField("pawn", BindingFlags.NonPublic | BindingFlags.Instance);
         private static bool isDrafted = false;
+
+		// Used for children pawns
+		private static bool typesInitialized = false;
+		private static MethodInfo getBodySizeScalingMI = null;
+		private static MethodInfo getModifiedHairMeshSetMI = null;
+
+		public static void Initialize()
+		{
+			if (!typesInitialized)
+			{
+				typesInitialized = true;
+				try
+				{
+					typesInitialized = true;
+					var mod = LoadedModManager.RunningMods.FirstOrDefault(m => m.Name.IndexOf("Children, school and learning") != -1);
+					if (mod != null)
+					{
+						Assembly assembly = mod.assemblies.loadedAssemblies.FirstOrDefault(a => a.GetName().Name == "ChildrenHelperClasses");
+						if (assembly != null)
+						{
+							Type type = assembly?.GetType("Children.ChildrenHarmony+PawnRenderer_RenderPawnInternal_Patch");
+							if (type != null)
+							{
+								getBodySizeScalingMI = type.GetMethod("GetBodysizeScaling", BindingFlags.NonPublic | BindingFlags.Static);//pawn.ageTracker.get_CurLifeStage().bodySizeFactor
+								getModifiedHairMeshSetMI = type.GetMethod("GetModifiedHairMeshSet", BindingFlags.NonPublic | BindingFlags.Static);// (bodySizeFactor, pawn).MeshAt(headFacing);
+							}
+						}
+					}
+				}
+				catch(Exception e)
+				{
+					Log.Warning("Failed to patch [Children, school and learning]\n" + e.GetType().Name + " " + e.Message);
+				}
+			}
+		}
+
         public static void Prefix(PawnRenderer __instance, ref Pawn __state)
         {
             __state = PawnFI.GetValue(__instance) as Pawn;
@@ -149,13 +188,22 @@ namespace ShowHair
                 }
                 else if ((hideHats || forceShowHair) && hairLoc > 0)
                 {
-                    if (hairLoc > 0.001f)
-                    {
-                        loc2.y = hairLoc - 0.001f;
+					if (hairLoc > 0.001f)
+					{
+						loc2.y = hairLoc - 0.001f;
 
-                        Mesh mesh4 = __instance.graphics.HairMeshSet.MeshAt(headFacing);
+						GraphicMeshSet meshSet;
+						if (getBodySizeScalingMI != null && getModifiedHairMeshSetMI != null)
+						{
+							meshSet = (GraphicMeshSet)getModifiedHairMeshSetMI.Invoke(
+								null, new object[] { __state.ageTracker.CurLifeStage.bodySizeFactor, __state });
+						}
+						else
+						{
+							meshSet = __instance.graphics.HairMeshSet;
+						}
                         Material mat = __instance.graphics.HairMatAt(headFacing);
-                        GenDraw.DrawMeshNowOrLater(mesh4, loc2, quad, mat, portrait);
+                        GenDraw.DrawMeshNowOrLater(meshSet.MeshAt(headFacing), loc2, quad, mat, portrait);
                     }
                 }
             }
@@ -267,5 +315,5 @@ namespace ShowHair
             return sb.ToString();
         }
 #endif
-    }
+	}
 }
