@@ -192,18 +192,22 @@ namespace ShowHair
 					{
 						loc2.y = hairLoc - 0.001f;
 
-						GraphicMeshSet meshSet;
+						Material mat = __instance.graphics.HairMatAt(headFacing);
 						if (getBodySizeScalingMI != null && getModifiedHairMeshSetMI != null)
 						{
-							meshSet = (GraphicMeshSet)getModifiedHairMeshSetMI.Invoke(
-								null, new object[] { __state.ageTracker.CurLifeStage.bodySizeFactor, __state });
+							Vector3 scaledHairLoc = new Vector3(b.x, b.y, b.z);
+							float scale = (float)getBodySizeScalingMI.Invoke(null, new object[] { __state.ageTracker.CurLifeStage.bodySizeFactor, __state });
+							scaledHairLoc.x *= scale;
+							scaledHairLoc.z *= scale;
+							scaledHairLoc += rootLoc;
+							scaledHairLoc.y = loc2.y;
+							GraphicMeshSet meshSet = (GraphicMeshSet)getModifiedHairMeshSetMI.Invoke(null, new object[] { scale, __state });
+							GenDraw.DrawMeshNowOrLater(meshSet.MeshAt(headFacing), scaledHairLoc, quad, mat, portrait);
 						}
 						else
 						{
-							meshSet = __instance.graphics.HairMeshSet;
+							GenDraw.DrawMeshNowOrLater(__instance.graphics.HairMeshSet.MeshAt(headFacing), loc2, quad, mat, portrait);
 						}
-                        Material mat = __instance.graphics.HairMatAt(headFacing);
-                        GenDraw.DrawMeshNowOrLater(meshSet.MeshAt(headFacing), loc2, quad, mat, portrait);
                     }
                 }
             }
