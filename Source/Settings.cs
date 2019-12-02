@@ -126,7 +126,7 @@ namespace ShowHair
                     ++defCount;
 
                     if (d.apparel != null &&
-                        d.apparel.LastLayer == RimWorld.ApparelLayerDefOf.Overhead &&
+                        IsHeadwear(d.apparel) &&
                         !String.IsNullOrEmpty(d.apparel.wornGraphicPath))
                     {
                         bool selected = false;
@@ -181,6 +181,14 @@ namespace ShowHair
                     }
                 }
             }
+        }
+
+        public static bool IsHeadwear(ApparelProperties apparelProperties)
+        {
+            return apparelProperties.LastLayer == ApparelLayerDefOf.Overhead
+                || apparelProperties.bodyPartGroups.Contains(BodyPartGroupDefOf.FullHead)
+                || apparelProperties.bodyPartGroups.Contains(BodyPartGroupDefOf.UpperHead)
+                || apparelProperties.bodyPartGroups.Contains(BodyPartGroupDefOf.Eyes);
         }
     }
 }

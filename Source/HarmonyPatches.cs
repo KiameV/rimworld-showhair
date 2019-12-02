@@ -124,10 +124,11 @@ namespace ShowHair
                 float hairLoc = 0;
                 bool flag = false;
                 List<ApparelGraphicRecord> apparelGraphics = __instance.graphics.apparelGraphics;
+                bool offsetApplied = false;
                 for (int j = 0; j < apparelGraphics.Count; j++)
                 {
                     Apparel sourceApparel = apparelGraphics[j].sourceApparel;
-                    if (sourceApparel.def.apparel.LastLayer == ApparelLayerDefOf.Overhead)
+                    if (Settings.IsHeadwear(sourceApparel.def.apparel))
                     {
 #if DEBUG && T
                         int i = 10324;
@@ -161,17 +162,21 @@ namespace ShowHair
                             forceShowHair = !force;
                         }
 
-                        if (!sourceApparel.def.apparel.hatRenderedFrontOfFace)
+                        if (!offsetApplied)
                         {
-                            flag = true;
-                            loc2.y += 0.03125f;
-                            hairLoc = loc2.y;
-                        }
-                        else
-                        {
-                            Vector3 loc3 = rootLoc + b;
-                            loc3.y += ((!(bodyFacing == Rot4.North)) ? 0.03515625f : 0.00390625f);
-                            hairLoc = loc3.y;
+                            if (!sourceApparel.def.apparel.hatRenderedFrontOfFace)
+                            {
+                                flag = true;
+                                loc2.y += 0.03125f;
+                                hairLoc = loc2.y;
+                            }
+                            else
+                            {
+                                Vector3 loc3 = rootLoc + b;
+                                loc3.y += ((!(bodyFacing == Rot4.North)) ? 0.03515625f : 0.00390625f);
+                                hairLoc = loc3.y;
+                            }
+                            offsetApplied = true;
                         }
                     }
                 }
