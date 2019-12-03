@@ -185,10 +185,19 @@ namespace ShowHair
 
         public static bool IsHeadwear(ApparelProperties apparelProperties)
         {
-            return apparelProperties.LastLayer == ApparelLayerDefOf.Overhead
-                || apparelProperties.bodyPartGroups.Contains(BodyPartGroupDefOf.FullHead)
-                || apparelProperties.bodyPartGroups.Contains(BodyPartGroupDefOf.UpperHead)
-                || apparelProperties.bodyPartGroups.Contains(BodyPartGroupDefOf.Eyes);
+            if (apparelProperties.LastLayer == ApparelLayerDefOf.Overhead)
+            {
+                return true;
+            }
+            for (int i = 0; i < apparelProperties.bodyPartGroups.Count; ++i)
+            {
+                var group = apparelProperties.bodyPartGroups[i];
+                if (group == BodyPartGroupDefOf.FullHead || group == BodyPartGroupDefOf.UpperHead || group == BodyPartGroupDefOf.Eyes)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }
