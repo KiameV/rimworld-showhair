@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
-  <ShowHair.ShowHair>Show Hair</ShowHair.ShowHair>
-  <ShowHair.HideAllHats>帽子を全て隠す</ShowHair.HideAllHats>
-  <ShowHair.SelectHatsWhichHideHair>着用時に髪を隠す帽子を選択する</ShowHair.SelectHatsWhichHideHair>
-  <ShowHair.ShowHatsOnlyWhenDrafted>徴兵された時だけ帽子を表示する</ShowHair.ShowHatsOnlyWhenDrafted>
-
+	<ShowHair.ShowHair>Show Hair</ShowHair.ShowHair>
+	<ShowHair.HideAllHats>帽子を全て隠す</ShowHair.HideAllHats>
+	<ShowHair.SelectHatsWhichHideHair>着用時に髪を隠す帽子を選択</ShowHair.SelectHatsWhichHideHair>
+	<ShowHair.SelectHairThatWillBeHidden>帽子が隠す髪型を選択</ShowHair.SelectHairThatWillBeHidden>
+	<ShowHair.ShowHatsOnlyWhenDrafted>徴兵された時だけ帽子を表示する</ShowHair.ShowHatsOnlyWhenDrafted>
 </LanguageData>
