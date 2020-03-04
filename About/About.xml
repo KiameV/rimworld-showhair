@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ModMetaData>
-    <name>[KV] Show Hair With Hats or Hide All Hats - 1.0</name>
-    <author>Kiame Vivacity</author>
-	<supportedVersions>
-		<li>1.0</li>
-	</supportedVersions>
-	<url></url>
+    <name>[KV] Show Hair With Hats or Hide All Hats - 1.1</name>
+    <author>Kiame Vivacity</author>    <supportedVersions>
+        <li>1.0</li>
+        <li>1.1</li>
+    </supportedVersions>
+	<packageId>showhair.kv.rw</packageId>
+	<url>https://ludeon.com/forums/index.php?topic=33575.msg342365#msg342365</url>
     <description>Show hair for all hats or select which hats do hide hair in Mod Settings.
 
 Hide all hats from Mod Settings.
@@ -21,3 +22,4 @@ Code:
 - LockdownX7 - Add support for more head wear
 </description>
 </ModMetaData>
+

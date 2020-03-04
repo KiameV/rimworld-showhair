@@ -1,4 +1,4 @@
-﻿using Harmony;
+﻿using HarmonyLib;
 using RimWorld;
 using System;
 using System.Collections.Generic;
@@ -15,7 +15,7 @@ namespace ShowHair
     {
         static HarmonyPatches()
         {
-            var harmony = HarmonyInstance.Create("com.showhair.rimworld.mod");
+            var harmony = new Harmony("com.showhair.rimworld.mod");
             harmony.PatchAll(Assembly.GetExecutingAssembly());
 
             Log.Message(
@@ -53,7 +53,7 @@ namespace ShowHair
 
     [HarmonyPatch(
         typeof(PawnRenderer), "RenderPawnInternal", 
-        new Type[] { typeof(Vector3), typeof(float), typeof(bool), typeof(Rot4), typeof(Rot4), typeof(RotDrawMode), typeof(bool), typeof(bool) })]
+        new Type[] { typeof(Vector3), typeof(float), typeof(bool), typeof(Rot4), typeof(Rot4), typeof(RotDrawMode), typeof(bool), typeof(bool), typeof(bool) })]
     public static class Patch_PawnRenderer_RenderPawnInternal
     {
         private static FieldInfo PawnFI = typeof(PawnRenderer).GetField("pawn", BindingFlags.NonPublic | BindingFlags.Instance);
