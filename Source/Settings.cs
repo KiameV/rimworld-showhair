@@ -27,6 +27,8 @@ namespace ShowHair
             Settings.Initialize();
 
             float y = 60f;
+            Widgets.CheckboxLabeled(new Rect(0, y, 250, 22), "ShowHair.OnlyApplyToColonists".Translate(), ref Settings.OnlyApplyToColonists);
+            y += 30;
             Widgets.CheckboxLabeled(new Rect(0, y, 250, 22), "ShowHair.HideAllHats".Translate(), ref Settings.HideAllHats);
             y += 30;
 
@@ -75,6 +77,7 @@ namespace ShowHair
 
     class Settings : ModSettings
     {
+        public static bool OnlyApplyToColonists = false;
         public static bool HideAllHats = false;
         public static bool ShowHatsOnlyWhenDrafted = false;
 
@@ -104,6 +107,7 @@ namespace ShowHair
             Scribe_Collections.Look(ref hairToHide, "HairToHide", LookMode.Value);
             Scribe_Collections.Look(ref hatsThatHide, "HatsThatHide", LookMode.Value);
             Scribe_Values.Look<bool>(ref HideAllHats, "HideAllHats", false, false);
+            Scribe_Values.Look<bool>(ref OnlyApplyToColonists, "OnlyApplyToColonists", false, false);
             Scribe_Values.Look<bool>(ref ShowHatsOnlyWhenDrafted, "ShowHatsOnlyWhenDrafted", false, false);
 
             if (Scribe.mode == LoadSaveMode.Saving)

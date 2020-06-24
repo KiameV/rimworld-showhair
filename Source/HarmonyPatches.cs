@@ -58,6 +58,7 @@ namespace ShowHair
     {
         private static FieldInfo PawnFI = typeof(PawnRenderer).GetField("pawn", BindingFlags.NonPublic | BindingFlags.Instance);
         private static bool isDrafted = false;
+        private static Pawn pawn;
 
 		// Used for children pawns
 		private static bool typesInitialized = false;
@@ -94,22 +95,22 @@ namespace ShowHair
 			}
 		}
 
-        public static void Prefix(PawnRenderer __instance, ref Pawn __state)
+        public static void Prefix(PawnRenderer __instance)
         {
-            __state = PawnFI.GetValue(__instance) as Pawn;
-            if (__state != null && Settings.ShowHatsOnlyWhenDrafted && __instance != null)
+            pawn = PawnFI.GetValue(__instance) as Pawn;
+            if (pawn != null && Settings.ShowHatsOnlyWhenDrafted && __instance != null)
             {
                 isDrafted = false;
-                if (__state.Faction == Faction.OfPlayer && __state.RaceProps.Humanlike)
+                if (pawn.Faction == Faction.OfPlayer && pawn.RaceProps.Humanlike)
                 {
-                    isDrafted = __state.Drafted;
+                    isDrafted = pawn.Drafted;
                 }
             }
         }
 
-        public static void Postfix(PawnRenderer __instance, ref Pawn __state, Vector3 rootLoc, float angle, bool renderBody, Rot4 bodyFacing, Rot4 headFacing, RotDrawMode bodyDrawType, bool portrait, bool headStump)
+        public static void Postfix(PawnRenderer __instance, Vector3 rootLoc, float angle, bool renderBody, Rot4 bodyFacing, Rot4 headFacing, RotDrawMode bodyDrawType, bool portrait, bool headStump)
         {
-            if (__state != null && __instance.graphics.headGraphic != null)
+            if (pawn != null && __instance.graphics.headGraphic != null)
             {
 #if DEBUG
                 bool isPawn = false;
@@ -187,7 +188,7 @@ namespace ShowHair
                 }
 #endif
                 if ((!flag && bodyDrawType != RotDrawMode.Dessicated && !headStump) || 
-                    (!hideHats && Settings.HairToHide.TryGetValue(__state.story.hairDef, out bool v) && v))
+                    (!hideHats && Settings.HairToHide.TryGetValue(pawn.story.hairDef, out bool v) && v))
                 {
                     // Hair was already rendered
                 }
@@ -201,12 +202,12 @@ namespace ShowHair
 						if (getBodySizeScalingMI != null && getModifiedHairMeshSetMI != null)
 						{
 							Vector3 scaledHairLoc = new Vector3(b.x, b.y, b.z);
-							float scale = (float)getBodySizeScalingMI.Invoke(null, new object[] { __state.ageTracker.CurLifeStage.bodySizeFactor, __state });
+							float scale = (float)getBodySizeScalingMI.Invoke(null, new object[] { pawn.ageTracker.CurLifeStage.bodySizeFactor, pawn });
 							scaledHairLoc.x *= scale;
 							scaledHairLoc.z *= scale;
 							scaledHairLoc += rootLoc;
 							scaledHairLoc.y = loc2.y;
-							GraphicMeshSet meshSet = (GraphicMeshSet)getModifiedHairMeshSetMI.Invoke(null, new object[] { scale, __state });
+							GraphicMeshSet meshSet = (GraphicMeshSet)getModifiedHairMeshSetMI.Invoke(null, new object[] { scale, pawn });
 							GenDraw.DrawMeshNowOrLater(meshSet.MeshAt(headFacing), scaledHairLoc, quad, mat, portrait);
 						}
 						else
@@ -220,21 +221,20 @@ namespace ShowHair
 
         private static bool HideHats(bool portrait)
         {
-            bool result;
+            if (Settings.OnlyApplyToColonists && pawn.Faction != Faction.OfPlayer)
+            {
+                return false;
+            }
             if (Settings.ShowHatsOnlyWhenDrafted)
             {
-                result = !isDrafted;
+                return !isDrafted;
             }
-            else
-            {
-                result = Settings.HideAllHats || (portrait && Prefs.HatsOnlyOnMap);
-            }
+            return Settings.HideAllHats || (portrait && Prefs.HatsOnlyOnMap);
 #if DEBUG && T
             Log.Warning(
                 "Result: " + result +
                 "- Settings.HideAllHats: " + Settings.HideAllHats + " Portrait: " + portrait + " Prefs.HatsOnlyOnMap: " + Prefs.HatsOnlyOnMap);
 #endif
-            return result;
         }
 
         public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
