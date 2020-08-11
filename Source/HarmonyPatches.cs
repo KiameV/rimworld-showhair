@@ -17,7 +17,7 @@ namespace ShowHair
         {
             var harmony = new Harmony("com.showhair.rimworld.mod");
             harmony.PatchAll(Assembly.GetExecutingAssembly());
-
+/*
             Log.Message(
                 "Show Hair Harmony Patches:" + Environment.NewLine +
                 "  Transpiler:" + Environment.NewLine +
@@ -25,7 +25,7 @@ namespace ShowHair
                 "  Postfix:" + Environment.NewLine +
                 "    PawnRenderer.RenderPawnInternal" + Environment.NewLine +
                 "    Game.InitNewGame" + Environment.NewLine +
-                "    SavedGameLoader.LoadGameFromSaveFile");
+                "    SavedGameLoader.LoadGameFromSaveFile");*/
 		}
 	}
 
@@ -237,6 +237,7 @@ namespace ShowHair
 #endif
         }
 
+        [HarmonyPriority(Priority.High)]
         public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
             MethodInfo hatsOnlyOnMap = AccessTools.Property(typeof(Prefs), nameof(Prefs.HatsOnlyOnMap)).GetGetMethod();
@@ -250,7 +251,8 @@ namespace ShowHair
                 CodeInstruction instruction = instructionList[i];
                 if (instructionList.Count > i + 2 &&
                     instructionList[i + 2].opcode == OpCodes.Call &&
-                    instructionList[i + 2].operand == hatsOnlyOnMap)
+                    instructionList[i + 2].operand is MethodInfo opMI &&
+                    opMI == hatsOnlyOnMap)
                 {
                     found = true;
 
