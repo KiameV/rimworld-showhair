@@ -219,17 +219,41 @@ namespace ShowHair
             }
         }
 
+        private static Dictionary<Pawn, bool> previousHatConfig = new Dictionary<Pawn, bool>();
+
         private static bool HideHats(bool portrait)
         {
             if (Settings.OnlyApplyToColonists && pawn.Faction != Faction.OfPlayer)
             {
                 return false;
             }
+            if (Settings.HideAllHats)
+            {
+                return true;
+            }
             if (Settings.ShowHatsOnlyWhenDrafted)
             {
                 return !isDrafted;
             }
-            return Settings.HideAllHats || (portrait && Prefs.HatsOnlyOnMap);
+            if (Settings.HideHatsIndoors)
+            {
+                bool hideHat = false;
+                RoofDef roofDef = pawn.Map?.roofGrid.RoofAt(pawn.Position);
+                if (roofDef != null)
+                {
+                    hideHat = !roofDef.isNatural;
+                }
+                if (!portrait && Settings.UpdatePortrait && pawn.Faction == Faction.OfPlayer)
+                {
+                    if (!previousHatConfig.TryGetValue(pawn, out bool wasHidden) || wasHidden != hideHat)
+                    {
+                        PortraitsCache.SetDirty(pawn);
+                        previousHatConfig[pawn] = hideHat;
+                    }
+                }
+                return hideHat;
+            }
+            return portrait && Prefs.HatsOnlyOnMap;
 #if DEBUG && T
             Log.Warning(
                 "Result: " + result +

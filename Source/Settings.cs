@@ -37,6 +37,17 @@ namespace ShowHair
                 Widgets.CheckboxLabeled(new Rect(0, y, 250, 22), "ShowHair.ShowHatsOnlyWhenDrafted".Translate(), ref Settings.ShowHatsOnlyWhenDrafted);
                 y += 40;
 
+                if (!Settings.ShowHatsOnlyWhenDrafted)
+                {
+                    Widgets.CheckboxLabeled(new Rect(0, y, 250, 22), "ShowHair.HideHatsIndoors".Translate(), ref Settings.HideHatsIndoors);
+                    y += 30;
+                    if (Settings.HideHatsIndoors)
+                    {
+                        Widgets.CheckboxLabeled(new Rect(10, y, 300, 22), "ShowHair.UpdatePortrait".Translate(), ref Settings.UpdatePortrait);
+                        y += 30;
+                    }
+                }
+
                 DrawTable(0f, y, 300f, ref scrollPosition, "ShowHair.SelectHatsWhichHideHair", new List<ThingDef>(Settings.HatsThatHide.Keys), Settings.HatsThatHide);
                 DrawTable(340f, y, 300f, ref scrollPosition2, "ShowHair.SelectHairThatWillBeHidden", new List<HairDef>(Settings.HairToHide.Keys), Settings.HairToHide);
             }
@@ -80,6 +91,8 @@ namespace ShowHair
         public static bool OnlyApplyToColonists = false;
         public static bool HideAllHats = false;
         public static bool ShowHatsOnlyWhenDrafted = false;
+        public static bool HideHatsIndoors = false;
+        public static bool UpdatePortrait = false;
 
         public static Dictionary<ThingDef, bool> HatsThatHide = new Dictionary<ThingDef, bool>();
         public static Dictionary<HairDef, bool> HairToHide = new Dictionary<HairDef, bool>();
@@ -109,6 +122,8 @@ namespace ShowHair
             Scribe_Values.Look<bool>(ref HideAllHats, "HideAllHats", false, false);
             Scribe_Values.Look<bool>(ref OnlyApplyToColonists, "OnlyApplyToColonists", false, false);
             Scribe_Values.Look<bool>(ref ShowHatsOnlyWhenDrafted, "ShowHatsOnlyWhenDrafted", false, false);
+            Scribe_Values.Look<bool>(ref HideHatsIndoors, "HideHatsIndoors", false, false);
+            Scribe_Values.Look<bool>(ref UpdatePortrait, "UpdatePortrait", false, false);
 
             if (Scribe.mode == LoadSaveMode.Saving)
             {
