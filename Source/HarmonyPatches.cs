@@ -64,6 +64,7 @@ namespace ShowHair
 		private static bool typesInitialized = false;
 		private static MethodInfo getBodySizeScalingMI = null;
 		private static MethodInfo getModifiedHairMeshSetMI = null;
+        private static bool hasAlienRaces = false;
 
 		public static void Initialize()
 		{
@@ -73,20 +74,26 @@ namespace ShowHair
 				try
 				{
 					typesInitialized = true;
-					var mod = LoadedModManager.RunningMods.FirstOrDefault(m => m.Name.IndexOf("Children, school and learning") != -1);
-					if (mod != null)
-					{
-						Assembly assembly = mod.assemblies.loadedAssemblies.FirstOrDefault(a => a.GetName().Name == "ChildrenHelperClasses");
-						if (assembly != null)
-						{
-							Type type = assembly?.GetType("Children.ChildrenHarmony+PawnRenderer_RenderPawnInternal_Patch");
-							if (type != null)
-							{
-								getBodySizeScalingMI = type.GetMethod("GetBodysizeScaling", BindingFlags.NonPublic | BindingFlags.Static);//pawn.ageTracker.get_CurLifeStage().bodySizeFactor
-								getModifiedHairMeshSetMI = type.GetMethod("GetModifiedHairMeshSet", BindingFlags.NonPublic | BindingFlags.Static);// (bodySizeFactor, pawn).MeshAt(headFacing);
-							}
-						}
-					}
+                    foreach (var mod in LoadedModManager.RunningMods)
+                    {
+                        if (mod.Name.IndexOf("Children, school and learning") != -1)
+                        {
+                            Assembly assembly = mod.assemblies.loadedAssemblies.FirstOrDefault(a => a.GetName().Name == "ChildrenHelperClasses");
+                            if (assembly != null)
+                            {
+                                Type type = assembly?.GetType("Children.ChildrenHarmony+PawnRenderer_RenderPawnInternal_Patch");
+                                if (type != null)
+                                {
+                                    getBodySizeScalingMI = type.GetMethod("GetBodysizeScaling", BindingFlags.NonPublic | BindingFlags.Static);//pawn.ageTracker.get_CurLifeStage().bodySizeFactor
+                                    getModifiedHairMeshSetMI = type.GetMethod("GetModifiedHairMeshSet", BindingFlags.NonPublic | BindingFlags.Static);// (bodySizeFactor, pawn).MeshAt(headFacing);
+                                }
+                            }
+                        }
+                        else if (mod.Name.IndexOf("Humanoid Alien Races") == 0)
+                        {
+                            hasAlienRaces = true;
+                        }
+                    }
 				}
 				catch(Exception e)
 				{
@@ -199,30 +206,115 @@ namespace ShowHair
 						loc2.y = hairLoc - 0.001f;
 
 						Material mat = __instance.graphics.HairMatAt(headFacing);
-						if (getBodySizeScalingMI != null && getModifiedHairMeshSetMI != null)
-						{
-							Vector3 scaledHairLoc = new Vector3(b.x, b.y, b.z);
-							float scale = (float)getBodySizeScalingMI.Invoke(null, new object[] { pawn.ageTracker.CurLifeStage.bodySizeFactor, pawn });
-							scaledHairLoc.x *= scale;
-							scaledHairLoc.z *= scale;
-							scaledHairLoc += rootLoc;
-							scaledHairLoc.y = loc2.y;
-							GraphicMeshSet meshSet = (GraphicMeshSet)getModifiedHairMeshSetMI.Invoke(null, new object[] { scale, pawn });
-							GenDraw.DrawMeshNowOrLater(meshSet.MeshAt(headFacing), scaledHairLoc, quad, mat, portrait);
-						}
-						else
-						{
-							GenDraw.DrawMeshNowOrLater(__instance.graphics.HairMeshSet.MeshAt(headFacing), loc2, quad, mat, portrait);
-						}
+                        if (getBodySizeScalingMI != null && getModifiedHairMeshSetMI != null)
+                        {
+                            Vector3 scaledHairLoc = new Vector3(b.x, b.y, b.z);
+                            float scale = (float)getBodySizeScalingMI.Invoke(null, new object[] { pawn.ageTracker.CurLifeStage.bodySizeFactor, pawn });
+                            scaledHairLoc.x *= scale;
+                            scaledHairLoc.z *= scale;
+                            scaledHairLoc += rootLoc;
+                            scaledHairLoc.y = loc2.y;
+                            GraphicMeshSet meshSet = (GraphicMeshSet)getModifiedHairMeshSetMI.Invoke(null, new object[] { scale, pawn });
+                            GenDraw.DrawMeshNowOrLater(meshSet.MeshAt(headFacing), scaledHairLoc, quad, mat, portrait);
+                        }
+                        else if (hasAlienRaces && DrawAlienPawn(pawn, headFacing, loc2, quad, mat, portrait))
+                        {
+                            ;
+                        }
+                        else
+                        {
+                            GenDraw.DrawMeshNowOrLater(__instance.graphics.HairMeshSet.MeshAt(headFacing), loc2, quad, mat, portrait);
+                        }
                     }
                 }
             }
         }
 
+        private static bool DrawAlienPawn(Pawn pawn, Rot4 headFacing, Vector3 loc2, Quaternion quad, Material mat, bool portrait)
+        {
+            foreach (var comp in pawn.AllComps)
+            {
+                if (comp.GetType().Name.IndexOf("AlienComp") >= 0)
+                {
+                    if (alienPortraitHeadGraphicsFI == null)
+                    {
+                        alienPortraitHeadGraphicsFI = comp.GetType().GetField("alienPortraitHeadGraphics", BindingFlags.Public | BindingFlags.Instance);
+                        if (alienPortraitHeadGraphicsFI == null)
+                        {
+                            string msg = "Failed to get alienPortraitHeadGraphics";
+                            Log.ErrorOnce(msg, msg.GetHashCode());
+                            return false;
+                        }
+                        alienHeadGraphicsFI = comp.GetType().GetField("alienHeadGraphics", BindingFlags.Public | BindingFlags.Instance);
+                        if (alienHeadGraphicsFI == null)
+                        {
+                            string msg = "Failed to get alienHeadGraphics";
+                            Log.ErrorOnce(msg, msg.GetHashCode());
+                            return false;
+                        }
+                        hairSetAverageFI = alienHeadGraphicsFI.GetValue(comp).GetType().GetField("hairSetAverage", BindingFlags.Public | BindingFlags.Instance);
+                        if (hairSetAverageFI == null)
+                        {
+                            string msg = "Failed to get hairSetAverage";
+                            Log.ErrorOnce(msg, msg.GetHashCode());
+                            return false;
+                        }
+                    }
+
+                    GraphicMeshSet m;
+                    if (portrait)
+                    {
+                        var f = alienPortraitHeadGraphicsFI.GetValue(comp);
+                        if (f == null)
+                        {
+                            string msg = "Failed to get alienPortraitHeadGraphics from comp";
+                            Log.ErrorOnce(msg, msg.GetHashCode());
+                            return false;
+                        }
+                        m = hairSetAverageFI.GetValue(f) as GraphicMeshSet;
+                        if (m == null)
+                        {
+                            string msg = "Failed to get mesh from from alienPortraitHeadGraphics";
+                            Log.ErrorOnce(msg, msg.GetHashCode());
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        var f = alienHeadGraphicsFI.GetValue(comp);
+                        if (f == null)
+                        {
+                            string msg = "Failed to get alienHeadGraphics from comp";
+                            Log.ErrorOnce(msg, msg.GetHashCode());
+                            return false;
+                        }
+                        m = hairSetAverageFI.GetValue(f) as GraphicMeshSet;
+                        if (m == null)
+                        {
+                            string msg = "Failed to get mesh from from hairSetAverage";
+                            Log.ErrorOnce(msg, msg.GetHashCode());
+                            return false;
+                        }
+                    }
+                    GenDraw.DrawMeshNowOrLater(m.MeshAt(headFacing), loc2, quad, mat, portrait);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static FieldInfo alienPortraitHeadGraphicsFI = null;
+        private static FieldInfo alienHeadGraphicsFI = null;
+        private static FieldInfo hairSetAverageFI = null;
+
         private static Dictionary<Pawn, bool> previousHatConfig = new Dictionary<Pawn, bool>();
 
         private static bool HideHats(bool portrait)
         {
+            if (Settings.OptionsOpen)
+            {
+                return true;
+            }
             if (Settings.OnlyApplyToColonists && pawn.Faction != Faction.OfPlayer)
             {
                 return false;

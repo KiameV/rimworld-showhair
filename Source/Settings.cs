@@ -11,6 +11,12 @@ namespace ShowHair
         private Settings Settings;
         private Vector2 scrollPosition = new Vector2(0, 0);
         private Vector2 scrollPosition2 = new Vector2(0, 0);
+        private ThingDef mouseOverThingDef;
+        private HairDef mouseOverHairDef, previousHairDef, pawnBackupHairDef;
+        private Pawn pawn;
+        private float previousHatY, previousHairY;
+
+        private bool isInitialized = false;
 
         public SettingsController(ModContentPack content) : base(content)
         {
@@ -25,6 +31,25 @@ namespace ShowHair
         public override void DoSettingsWindowContents(Rect rect)
         {
             Settings.Initialize();
+
+            if (!isInitialized)
+            {
+                Settings.OptionsOpen = true;
+            }
+
+            if (Current.Game != null && this.pawn == null)
+            {
+                foreach (Pawn p in PawnsFinder.All_AliveOrDead)
+                {
+                    if (p.Faction != Faction.OfPlayer && p.def.race.Humanlike && p.equipment != null)
+                    {
+                        this.pawn = p;
+                        this.pawn.Drawer.renderer.graphics.SetApparelGraphicsDirty();
+                        PortraitsCache.SetDirty(this.pawn);
+                        break;
+                    }
+                }
+            }
 
             float y = 60f;
             Widgets.CheckboxLabeled(new Rect(0, y, 250, 22), "ShowHair.OnlyApplyToColonists".Translate(), ref Settings.OnlyApplyToColonists);
@@ -48,8 +73,28 @@ namespace ShowHair
                     }
                 }
 
-                DrawTable(0f, y, 300f, ref scrollPosition, "ShowHair.SelectHatsWhichHideHair", new List<ThingDef>(Settings.HatsThatHide.Keys), Settings.HatsThatHide);
-                DrawTable(340f, y, 300f, ref scrollPosition2, "ShowHair.SelectHairThatWillBeHidden", new List<HairDef>(Settings.HairToHide.Keys), Settings.HairToHide);
+                DrawTable(0f, y, 300f, ref scrollPosition, ref previousHatY, "ShowHair.SelectHatsWhichHideHair", new List<ThingDef>(Settings.HatsThatHide.Keys), Settings.HatsThatHide);
+                DrawTable(340f, y, 300f, ref scrollPosition2, ref previousHairY, "ShowHair.SelectHairThatWillBeHidden", new List<HairDef>(Settings.HairToHide.Keys), Settings.HairToHide);
+
+                if (this.mouseOverThingDef != null)
+                    Widgets.ThingIcon(new Rect(700f, y + 50, 50, 50), this.mouseOverThingDef);
+                if (this.pawn != null && this.mouseOverHairDef != null)
+                {
+                    if (this.mouseOverHairDef != this.previousHairDef)
+                    {
+                        this.previousHairDef = this.mouseOverHairDef;
+                        if (this.mouseOverHairDef != null)
+                        {
+                            this.pawnBackupHairDef = this.pawn.story.hairDef;
+
+                            this.pawn.story.hairDef = this.mouseOverHairDef;
+
+                            this.pawn.Drawer.renderer.graphics.ResolveAllGraphics();
+                            PortraitsCache.SetDirty(this.pawn);
+                        }
+                    }
+                    DrawPortraitWidget(630f, y + 150f);
+                }
             }
             else
             {
@@ -57,25 +102,67 @@ namespace ShowHair
             }
         }
 
-        private void DrawTable<T>(float x, float y, float width, ref Vector2 scroll, string header, ICollection<T> labels, Dictionary<T, bool> items) where T : Def
+        public override void WriteSettings()
+        {
+            base.WriteSettings();
+            Settings.OptionsOpen = false;
+            if (this.pawnBackupHairDef != null && this.pawn != null)
+            {
+                this.pawn.story.hairDef = this.pawnBackupHairDef;
+                this.pawn.Drawer.renderer.graphics.ResolveAllGraphics();
+                PortraitsCache.SetDirty(this.pawn);
+            }
+        }
+
+        private void DrawPortraitWidget(float left, float top)
+        {
+            // Portrait
+            Rect rect = new Rect(left, top, 192f, 192f);
+
+            // Draw the pawn's portrait
+            GUI.BeginGroup(rect);
+            Vector2 size = new Vector2(128f, 180f);
+            Rect position = new Rect(rect.width * 0.5f - size.x * 0.5f, 10f + rect.height * 0.5f - size.y * 0.5f, size.x, size.y);
+            RenderTexture image = PortraitsCache.Get(this.pawn, size, new Vector3(0f, 0f, 0f), 1f);
+            GUI.DrawTexture(position, image);
+            GUI.EndGroup();
+        }
+
+        private void DrawTable<T>(float x, float y, float width, ref Vector2 scroll, ref float innerY, string header, ICollection<T> labels, Dictionary<T, bool> items) where T : Def
         {
             const float ROW_HEIGHT = 28;
             GUI.BeginGroup(new Rect(x, y, width, 400));
             Text.Font = GameFont.Medium;
             Widgets.Label(new Rect(0, 0, width, 40), header.Translate());
-            Widgets.BeginScrollView(new Rect(0, 50, width, 300), ref scroll, new Rect(0, 0, width - 16, items.Count * ROW_HEIGHT + 40));
+            Rect rect = new Rect(0, 0, width - 16, innerY);
+            Widgets.BeginScrollView(new Rect(0, 50, width, 300), ref scroll, rect);
             Text.Font = GameFont.Small;
+
+            bool isMouseInside = Mouse.IsOver(rect);
 
             int index = 0;
             bool b, orig;
             foreach (T t in labels)
             {
-                y = index * ROW_HEIGHT;
+                innerY = index * ROW_HEIGHT;
                 ++index;
-                Widgets.Label(new Rect(0, y, 200, 22), t.label + ":");
+
+                rect = new Rect(45f, innerY, 200, ROW_HEIGHT);
+                if (isMouseInside)
+                {
+                    if (Mouse.IsOver(rect))
+                    {
+                        if (t is ThingDef td)
+                            this.mouseOverThingDef = td;
+                        else if (t is HairDef hd)
+                            this.mouseOverHairDef = hd;//GraphicDatabase.Get<Graphic_Multi>(hd.texPath, ShaderDatabase.Transparent, Vector2.one, Color.white);
+                    }
+                }
+
+                Widgets.Label(rect, t.label + ":");
 
                 b = orig = items[t];
-                Widgets.Checkbox(new Vector2(220, y - 1), ref b);
+                Widgets.Checkbox(new Vector2(220, innerY - 1), ref b);
                 if (b != orig)
                 {
                     items[t] = b;
@@ -93,6 +180,7 @@ namespace ShowHair
         public static bool ShowHatsOnlyWhenDrafted = false;
         public static bool HideHatsIndoors = false;
         public static bool UpdatePortrait = false;
+        public static bool OptionsOpen = false;
 
         public static Dictionary<ThingDef, bool> HatsThatHide = new Dictionary<ThingDef, bool>();
         public static Dictionary<HairDef, bool> HairToHide = new Dictionary<HairDef, bool>();
@@ -132,6 +220,8 @@ namespace ShowHair
                 hairToHide.Clear();
                 hairToHide = null;
             }
+
+            OptionsOpen = false;
         }
 
         private static bool isInitialized = false;
