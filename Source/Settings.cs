@@ -1,6 +1,7 @@
 ﻿using RimWorld;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 using Verse;
 
@@ -11,12 +12,16 @@ namespace ShowHair
         private Settings Settings;
         private Vector2 scrollPosition = new Vector2(0, 0);
         private Vector2 scrollPosition2 = new Vector2(0, 0);
-        private ThingDef mouseOverThingDef;
+        private ThingDef mouseOverThingDef, previousHatDef;
+        private ThingWithComps pawnBackupHat;
+        private Dictionary<ThingDef, ThingWithComps> spawnedHats = new Dictionary<ThingDef, ThingWithComps>();
         private HairDef mouseOverHairDef, previousHairDef, pawnBackupHairDef;
         private Pawn pawn;
+        private Color originalColor;
+        private bool putHatOnPawn = false;
         private float previousHatY, previousHairY;
-
-        private bool isInitialized = false;
+        private FieldInfo wornApparelFI = typeof(Pawn_ApparelTracker).GetField("wornApparel", BindingFlags.NonPublic | BindingFlags.Instance);
+        private FieldInfo innerListFI = typeof(ThingOwner<Apparel>).GetField("innerList", BindingFlags.NonPublic | BindingFlags.Instance);
 
         public SettingsController(ModContentPack content) : base(content)
         {
@@ -32,23 +37,37 @@ namespace ShowHair
         {
             Settings.Initialize();
 
-            if (!isInitialized)
-            {
-                Settings.OptionsOpen = true;
-            }
+            Settings.OptionsOpen = !this.putHatOnPawn;
 
             if (Current.Game != null && this.pawn == null)
             {
                 foreach (Pawn p in PawnsFinder.All_AliveOrDead)
                 {
-                    if (p.Faction != Faction.OfPlayer && p.def.race.Humanlike && p.equipment != null)
+                    if (p.Faction != Faction.OfPlayer && 
+                        p.def.race.Humanlike && 
+                        !p.health.Downed &&
+                        p.equipment != null)
                     {
                         this.pawn = p;
-                        this.pawn.Drawer.renderer.graphics.SetApparelGraphicsDirty();
+                        this.originalColor = p.story.hairColor;
+                        foreach(ThingWithComps t in p.apparel.WornApparel)
+                        {
+                            if (t.def.apparel?.layers.Contains(ApparelLayerDefOf.Overhead) == true)
+                            {
+                                this.pawnBackupHat = t;
+                                this.RemoveApparel(pawnBackupHat);
+                                this.pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
+                                break;
+                            }
+                        }
                         PortraitsCache.SetDirty(this.pawn);
                         break;
                     }
                 }
+            }
+            else if (Current.Game == null)
+            {
+                this.pawn = null;
             }
 
             float y = 60f;
@@ -77,7 +96,36 @@ namespace ShowHair
                 DrawTable(340f, y, 300f, ref scrollPosition2, ref previousHairY, "ShowHair.SelectHairThatWillBeHidden", new List<HairDef>(Settings.HairToHide.Keys), Settings.HairToHide);
 
                 if (this.mouseOverThingDef != null)
-                    Widgets.ThingIcon(new Rect(700f, y + 50, 50, 50), this.mouseOverThingDef);
+                {
+                    if (this.putHatOnPawn)
+                    {
+                        if (this.previousHatDef != this.mouseOverThingDef)
+                        {
+                            if (this.previousHatDef != null)
+                            {
+                                this.RemoveApparel(this.spawnedHats[this.previousHatDef]);
+                            }
+
+                            this.previousHatDef = this.mouseOverThingDef;
+
+                            if (!spawnedHats.TryGetValue(this.mouseOverThingDef, out ThingWithComps thing))
+                            {
+                                ThingDef stuff = GenStuff.RandomStuffFor(this.mouseOverThingDef);
+                                thing = ThingMaker.MakeThing(this.mouseOverThingDef, stuff) as ThingWithComps;
+                                thing.TryGetComp<CompQuality>()?.SetQuality(QualityUtility.GenerateQualityRandomEqualChance(), ArtGenerationContext.Colony);
+                                thing.stackCount = 1;
+                                this.spawnedHats.Add(thing.def, thing);
+                            }
+                            this.AddApparel(thing);
+                            this.pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
+                            PortraitsCache.SetDirty(this.pawn);
+                        }
+                    }
+                    else
+                    {
+                        Widgets.ThingIcon(new Rect(700f, y + 50, 50, 50), this.mouseOverThingDef);
+                    }
+                }
                 if (this.pawn != null && this.mouseOverHairDef != null)
                 {
                     if (this.mouseOverHairDef != this.previousHairDef)
@@ -93,7 +141,41 @@ namespace ShowHair
                             PortraitsCache.SetDirty(this.pawn);
                         }
                     }
+                }
+
+                if (pawn != null)
+                {
                     DrawPortraitWidget(630f, y + 150f);
+                    bool b = this.putHatOnPawn;
+                    Widgets.CheckboxLabeled(new Rect(650f, y + 350, 150, 30), "ShowHair.PutHatOnPawn".Translate(), ref this.putHatOnPawn);
+                    if (b != this.putHatOnPawn)
+                    {
+                        this.pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
+                        PortraitsCache.SetDirty(this.pawn);
+                    }
+                    Widgets.Label(new Rect(600f, y + 400, 75, 30), "ShowHair.HairColor".Translate());
+                    if (Widgets.ButtonText(new Rect(680, y + 400, 50, 30), "ShowHair.WhiteHairColor".Translate()))
+                    {
+                        this.pawn.story.hairColor = Color.white;
+                        this.pawn.Drawer.renderer.graphics.ResolveAllGraphics();
+                        PortraitsCache.SetDirty(this.pawn);
+                    }
+                    if (Widgets.ButtonText(new Rect(740, y + 400, 50, 30), "ShowHair.YellowHairColor".Translate()))
+                    {
+                        this.pawn.story.hairColor = Color.yellow;
+                        this.pawn.Drawer.renderer.graphics.ResolveAllGraphics();
+                        PortraitsCache.SetDirty(this.pawn);
+                    }
+                    if (Widgets.ButtonText(new Rect(800, y + 400, 50, 30), "ShowHair.GreenHairColor".Translate()))
+                    {
+                        this.pawn.story.hairColor = Color.green;
+                        this.pawn.Drawer.renderer.graphics.ResolveAllGraphics();
+                        PortraitsCache.SetDirty(this.pawn);
+                    }
+                }
+                else
+                {
+                    Widgets.Label(new Rect(650f, y + 150f, 200, 30), "ShowHair.StartGameToSeePawn".Translate());
                 }
             }
             else
@@ -102,13 +184,68 @@ namespace ShowHair
             }
         }
 
+        private bool TryGetInnerList(out List<Apparel> l)
+        {
+            l = null;
+            var wornApparel = this.wornApparelFI.GetValue(this.pawn.apparel) as ThingOwner<Apparel>;
+            if (wornApparel == null)
+            {
+                Log.Error("Failed to get apparel");
+                return false;
+            }
+
+            l = this.innerListFI.GetValue(wornApparel) as List<Apparel>;
+            if (l == null)
+            {
+                Log.Error("Failed to get inner list");
+                return false;
+            }
+            return true;
+        }
+
+        private void AddApparel(ThingWithComps t)
+        {
+            if (this.TryGetInnerList(out var l))
+                l.Add(t as Apparel);
+        }
+
+        private bool ContainsApparel(ThingWithComps t)
+        {
+            if (this.TryGetInnerList(out var l))
+                return l.Contains(t as Apparel);
+            return false;
+        }
+
+        private void RemoveApparel(ThingWithComps t)
+        {
+            if (this.TryGetInnerList(out var l))
+                l.Remove(t as Apparel);
+        }
+
         public override void WriteSettings()
         {
             base.WriteSettings();
             Settings.OptionsOpen = false;
-            if (this.pawnBackupHairDef != null && this.pawn != null)
+            if (this.pawn != null)
             {
-                this.pawn.story.hairDef = this.pawnBackupHairDef;
+                this.pawn.story.hairColor = this.originalColor;
+                if (this.spawnedHats?.Count > 0)
+                {
+                    foreach(var h in this.spawnedHats.Values)
+                    {
+                        this.RemoveApparel(h);
+                        h.Destroy(DestroyMode.Vanish);
+                    }
+                }
+                this.spawnedHats.Clear();
+                if (this.pawnBackupHat != null && !this.ContainsApparel(this.pawnBackupHat))
+                {
+                    this.AddApparel(this.pawnBackupHat);
+                }
+
+                if (this.pawnBackupHairDef != null)
+                    this.pawn.story.hairDef = this.pawnBackupHairDef;
+
                 this.pawn.Drawer.renderer.graphics.ResolveAllGraphics();
                 PortraitsCache.SetDirty(this.pawn);
             }
@@ -159,17 +296,29 @@ namespace ShowHair
                     }
                 }
 
-                Widgets.Label(rect, t.label + ":");
+                Widgets.Label(rect, ((this.pawn != null && IsSelected(t)) ? "* " : "") + t.label + ":");
 
                 b = orig = items[t];
                 Widgets.Checkbox(new Vector2(220, innerY - 1), ref b);
                 if (b != orig)
                 {
                     items[t] = b;
+                    if (this.pawn != null)
+                    {
+                        this.pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
+                        PortraitsCache.SetDirty(this.pawn);
+                    }
                 }
             }
             Widgets.EndScrollView();
             GUI.EndGroup();
+        }
+
+        private bool IsSelected(Def def)
+        {
+            if (def is ThingDef)
+                return def == this.mouseOverThingDef;
+            return def == this.mouseOverHairDef;
         }
     }
 
