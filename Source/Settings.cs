@@ -89,6 +89,10 @@ namespace ShowHair
                     {
                         Widgets.CheckboxLabeled(new Rect(10, y, 300, 22), "ShowHair.UpdatePortrait".Translate(), ref Settings.UpdatePortrait);
                         y += 30;
+                        Widgets.CheckboxLabeled(new Rect(10, y, 300, 22), "ShowHair.HideHatsIndoorsShowWhenDrafted".Translate(), ref Settings.ShowHatsWhenDraftedIndoors);
+                        y += 30;
+                        Widgets.CheckboxLabeled(new Rect(10, y, 300, 22), "ShowHair.ShowHatsUnderNaturalRoof".Translate(), ref Settings.HideHatsNaturalRoof);
+                        y += 30;
                     }
                 }
 
@@ -145,6 +149,7 @@ namespace ShowHair
 
                 if (pawn != null)
                 {
+                    y -= 60;
                     DrawPortraitWidget(630f, y + 150f);
                     bool b = this.putHatOnPawn;
                     Widgets.CheckboxLabeled(new Rect(650f, y + 350, 150, 30), "ShowHair.PutHatOnPawn".Translate(), ref this.putHatOnPawn);
@@ -272,7 +277,7 @@ namespace ShowHair
             Text.Font = GameFont.Medium;
             Widgets.Label(new Rect(0, 0, width, 40), header.Translate());
             Rect rect = new Rect(0, 0, width - 16, innerY);
-            Widgets.BeginScrollView(new Rect(0, 50, width, 300), ref scroll, rect);
+            Widgets.BeginScrollView(new Rect(0, 50, width, 280), ref scroll, rect);
             Text.Font = GameFont.Small;
 
             bool isMouseInside = Mouse.IsOver(rect);
@@ -328,8 +333,10 @@ namespace ShowHair
         public static bool HideAllHats = false;
         public static bool ShowHatsOnlyWhenDrafted = false;
         public static bool HideHatsIndoors = false;
+        public static bool ShowHatsWhenDraftedIndoors = false;
         public static bool UpdatePortrait = false;
         public static bool OptionsOpen = false;
+        public static bool HideHatsNaturalRoof = false;
 
         public static Dictionary<ThingDef, bool> HatsThatHide = new Dictionary<ThingDef, bool>();
         public static Dictionary<HairDef, bool> HairToHide = new Dictionary<HairDef, bool>();
@@ -359,6 +366,8 @@ namespace ShowHair
             Scribe_Values.Look<bool>(ref HideAllHats, "HideAllHats", false, false);
             Scribe_Values.Look<bool>(ref OnlyApplyToColonists, "OnlyApplyToColonists", false, false);
             Scribe_Values.Look<bool>(ref ShowHatsOnlyWhenDrafted, "ShowHatsOnlyWhenDrafted", false, false);
+            Scribe_Values.Look<bool>(ref ShowHatsWhenDraftedIndoors, "ShowHatsWhenDraftedIndoors", false, false);
+            Scribe_Values.Look<bool>(ref HideHatsNaturalRoof, "HideHatsNaturalRoof", false, false);
             Scribe_Values.Look<bool>(ref HideHatsIndoors, "HideHatsIndoors", false, false);
             Scribe_Values.Look<bool>(ref UpdatePortrait, "UpdatePortrait", false, false);
 

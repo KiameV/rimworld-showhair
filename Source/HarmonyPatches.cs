@@ -205,7 +205,7 @@ namespace ShowHair
 					{
 						loc2.y = hairLoc - 0.001f;
 
-						Material mat = __instance.graphics.HairMatAt(headFacing);
+						Material mat = __instance.graphics.HairMatAt_NewTemp(headFacing, true);
                         if (getBodySizeScalingMI != null && getModifiedHairMeshSetMI != null)
                         {
                             Vector3 scaledHairLoc = new Vector3(b.x, b.y, b.z);
@@ -329,11 +329,23 @@ namespace ShowHair
             }
             if (Settings.HideHatsIndoors)
             {
+                if (pawn.Drafted && Settings.ShowHatsWhenDraftedIndoors)
+                {
+                    return false;
+                }
+
                 bool hideHat = false;
                 RoofDef roofDef = pawn.Map?.roofGrid.RoofAt(pawn.Position);
                 if (roofDef != null)
                 {
-                    hideHat = !roofDef.isNatural;
+                    if (roofDef.isNatural)
+                    {
+                        hideHat = Settings.HideHatsNaturalRoof;
+                    }
+                    else
+                    {
+                        hideHat = true;
+                    }
                 }
                 if (!portrait && Settings.UpdatePortrait && pawn.Faction == Faction.OfPlayer)
                 {

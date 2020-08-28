@@ -7,7 +7,9 @@
 	<ShowHair.ShowHatsOnlyWhenDrafted>Show Hats Only When Drafted</ShowHair.ShowHatsOnlyWhenDrafted>
 	<ShowHair.OnlyApplyToColonists>Only Apply to Colonists</ShowHair.OnlyApplyToColonists>
 	<ShowHair.HideHatsIndoors>Hide Hats Indoors</ShowHair.HideHatsIndoors>
+	<ShowHair.HideHatsIndoorsShowWhenDrafted>Show Hat When Drafted</ShowHair.HideHatsIndoorsShowWhenDrafted>
 	<ShowHair.UpdatePortrait>Update Portrait (may decrease FPS)</ShowHair.UpdatePortrait>
+	<ShowHair.ShowHatsUnderNaturalRoof>Hide Hats Under Natural Roof</ShowHair.ShowHatsUnderNaturalRoof>
 	<ShowHair.PutHatOnPawn>Put hat on pawn</ShowHair.PutHatOnPawn>
 	<ShowHair.StartGameToSeePawn>Start game to see pawn</ShowHair.StartGameToSeePawn>
 	<ShowHair.HairColor>Hair Color</ShowHair.HairColor>
