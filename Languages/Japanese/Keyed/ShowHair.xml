@@ -9,6 +9,7 @@
   <ShowHair.HideHatsIndoors>屋内で帽子を隠す</ShowHair.HideHatsIndoors>
   <ShowHair.HideHatsIndoorsShowWhenDrafted>徴兵された時に帽子を表示する</ShowHair.HideHatsIndoorsShowWhenDrafted>
   <ShowHair.UpdatePortrait>入植者一覧も更新（FPSが低下する可能性）</ShowHair.UpdatePortrait>
+  <ShowHair.ShowHatsUnderNaturalRoof>岩天井の下で帽子を隠す</ShowHair.ShowHatsUnderNaturalRoof>
   <ShowHair.PutHatOnPawn>ポーンが被った状態</ShowHair.PutHatOnPawn>
   <ShowHair.StartGameToSeePawn>ゲーム内での表示</ShowHair.StartGameToSeePawn>
   <ShowHair.HairColor>髪の色</ShowHair.HairColor>
