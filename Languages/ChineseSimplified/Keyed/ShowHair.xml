@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LanguageData>
+	<ShowHair.ShowHair>显示头发</ShowHair.ShowHair>
+	<ShowHair.HideAllHats>隐藏所有帽子</ShowHair.HideAllHats>
+	<ShowHair.SelectHatsWhichHideHair>选择可以隐藏头发的帽子</ShowHair.SelectHatsWhichHideHair>
+	<ShowHair.SelectHairThatWillBeHidden>选择帽子会隐藏的头发</ShowHair.SelectHairThatWillBeHidden>
+	<ShowHair.ShowHatsOnlyWhenDrafted>仅在起草时显示帽子</ShowHair.ShowHatsOnlyWhenDrafted>
+	<ShowHair.OnlyApplyToColonists>只适用于殖民者</ShowHair.OnlyApplyToColonists>
+	<ShowHair.HideHatsIndoors>隐藏室内的帽子</ShowHair.HideHatsIndoors>
+	<ShowHair.HideHatsIndoorsShowWhenDrafted>在起草时显示帽子</ShowHair.HideHatsIndoorsShowWhenDrafted>
+	<ShowHair.UpdatePortrait>更新肖像（可能会降低FPS）</ShowHair.UpdatePortrait>
+	<ShowHair.ShowHatsUnderNaturalRoof>在自然屋檐下隐藏帽子</ShowHair.ShowHatsUnderNaturalRoof>
+	<ShowHair.PutHatOnPawn>将帽子放在小人身上</ShowHair.PutHatOnPawn>
+	<ShowHair.StartGameToSeePawn>开始游戏看小人</ShowHair.StartGameToSeePawn>
+	<ShowHair.HairColor>头发颜色</ShowHair.HairColor>
+	<ShowHair.WhiteHairColor>W</ShowHair.WhiteHairColor>
+	<ShowHair.YellowHairColor>Y</ShowHair.YellowHairColor>
+	<ShowHair.GreenHairColor>G</ShowHair.GreenHairColor>
+</LanguageData>
