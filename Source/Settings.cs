@@ -317,6 +317,7 @@ namespace ShowHair
             }
             Widgets.EndScrollView();
             GUI.EndGroup();
+            innerY += ROW_HEIGHT;
         }
 
         private bool IsSelected(Def def)
