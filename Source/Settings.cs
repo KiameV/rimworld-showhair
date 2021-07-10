@@ -96,8 +96,8 @@ namespace ShowHair
                     }
                 }
 
-                DrawTable(0f, y, 300f, ref scrollPosition, ref previousHatY, "ShowHair.SelectHatsWhichHideHair", new List<ThingDef>(Settings.HatsThatHide.Keys), Settings.HatsThatHide);
-                DrawTable(340f, y, 300f, ref scrollPosition2, ref previousHairY, "ShowHair.SelectHairThatWillBeHidden", new List<HairDef>(Settings.HairToHide.Keys), Settings.HairToHide);
+                DrawTable(0f, y, 300f, ref scrollPosition, ref previousHatY, "ShowHair.HatsHideHideHair", new List<ThingDef>(Settings.HatsThatHide.Keys), Settings.HatsToHide, Settings.HatsThatHide);
+                DrawTable(340f, y, 300f, ref scrollPosition2, ref previousHairY, "ShowHair.HairThatWillBeHidden", new List<HairDef>(Settings.HairToHide.Keys), Settings.HairToHide);
 
                 if (this.mouseOverThingDef != null)
                 {
@@ -265,12 +265,12 @@ namespace ShowHair
             GUI.BeginGroup(rect);
             Vector2 size = new Vector2(128f, 180f);
             Rect position = new Rect(rect.width * 0.5f - size.x * 0.5f, 10f + rect.height * 0.5f - size.y * 0.5f, size.x, size.y);
-            RenderTexture image = PortraitsCache.Get(this.pawn, size, new Vector3(0f, 0f, 0f), 1f);
+            RenderTexture image = PortraitsCache.Get(this.pawn, size, Rot4.South);
             GUI.DrawTexture(position, image);
             GUI.EndGroup();
         }
 
-        private void DrawTable<T>(float x, float y, float width, ref Vector2 scroll, ref float innerY, string header, ICollection<T> labels, Dictionary<T, bool> items) where T : Def
+        private void DrawTable<T>(float x, float y, float width, ref Vector2 scroll, ref float innerY, string header, ICollection<T> labels, Dictionary<T, bool> items, Dictionary<T, bool> items2 = null) where T : Def
         {
             const float ROW_HEIGHT = 28;
             GUI.BeginGroup(new Rect(x, y, width, 400));
@@ -304,7 +304,7 @@ namespace ShowHair
                 Widgets.Label(rect, ((this.pawn != null && IsSelected(t)) ? "* " : "") + t.label + ":");
 
                 b = orig = items[t];
-                Widgets.Checkbox(new Vector2(220, innerY - 1), ref b);
+                Widgets.Checkbox(new Vector2(items2 == null ? 240 : 210, innerY - 1), ref b);
                 if (b != orig)
                 {
                     items[t] = b;
@@ -312,6 +312,20 @@ namespace ShowHair
                     {
                         this.pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
                         PortraitsCache.SetDirty(this.pawn);
+                    }
+                }
+                if (items2 != null && !b)
+                {
+                    b = orig = items2[t];
+                    Widgets.Checkbox(new Vector2(240, innerY - 1), ref b);
+                    if (b != orig)
+                    {
+                        items2[t] = b;
+                        if (this.pawn != null)
+                        {
+                            this.pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
+                            PortraitsCache.SetDirty(this.pawn);
+                        }
                     }
                 }
             }
@@ -340,9 +354,11 @@ namespace ShowHair
         public static bool HideHatsNaturalRoof = false;
 
         public static Dictionary<ThingDef, bool> HatsThatHide = new Dictionary<ThingDef, bool>();
+        public static Dictionary<ThingDef, bool> HatsToHide = new Dictionary<ThingDef, bool>();
         public static Dictionary<HairDef, bool> HairToHide = new Dictionary<HairDef, bool>();
 
         private static List<string> hatsThatHide = null;
+        private static List<string> hatsToHide = null;
         private static List<string> hairToHide = null;
 
         public override void ExposeData()
@@ -356,6 +372,11 @@ namespace ShowHair
                     if (kv.Value)
                         hatsThatHide.Add(kv.Key.defName);
 
+                hatsToHide = new List<string>();
+                foreach (KeyValuePair<ThingDef, bool> kv in HatsToHide)
+                    if (kv.Value)
+                        hatsToHide.Add(kv.Key.defName);
+
                 hairToHide = new List<string>();
                 foreach (KeyValuePair<HairDef, bool> kv in HairToHide)
                     if (kv.Value)
@@ -364,6 +385,7 @@ namespace ShowHair
 
             Scribe_Collections.Look(ref hairToHide, "HairToHide", LookMode.Value);
             Scribe_Collections.Look(ref hatsThatHide, "HatsThatHide", LookMode.Value);
+            Scribe_Collections.Look(ref hatsToHide, "HatsToHide", LookMode.Value);
             Scribe_Values.Look<bool>(ref HideAllHats, "HideAllHats", false, false);
             Scribe_Values.Look<bool>(ref OnlyApplyToColonists, "OnlyApplyToColonists", false, false);
             Scribe_Values.Look<bool>(ref ShowHatsOnlyWhenDrafted, "ShowHatsOnlyWhenDrafted", false, false);
@@ -376,6 +398,8 @@ namespace ShowHair
             {
                 hatsThatHide.Clear();
                 hatsThatHide = null;
+                hatsToHide.Clear();
+                hatsToHide = null;
                 hairToHide.Clear();
                 hairToHide = null;
             }
@@ -397,19 +421,8 @@ namespace ShowHair
                         IsHeadwear(d.apparel) &&
                         !String.IsNullOrEmpty(d.apparel.wornGraphicPath))
                     {
-                        bool selected = false;
-                        if (hatsThatHide != null)
-                        {
-                            foreach (string s in hatsThatHide)
-                            {
-                                if (s.Equals(d.defName))
-                                {
-                                    selected = true;
-                                    break;
-                                }
-                            }
-                        }
-                        HatsThatHide[d] = selected;
+                        HatsThatHide[d] = hatsThatHide?.Contains(d.defName) == true;
+                        HatsToHide[d] = hatsToHide?.Contains(d.defName) == true;
                     }
                 }
 
@@ -436,17 +449,12 @@ namespace ShowHair
 
                 if (isInitialized)
                 {
-                    if (hairToHide != null)
-                    {
-                        hairToHide.Clear();
-                        hairToHide = null;
-                    }
-
-                    if (hatsThatHide != null)
-                    {
-                        hatsThatHide.Clear();
-                        hatsThatHide = null;
-                    }
+                    hairToHide?.Clear();
+                    hairToHide = null;
+                    hatsThatHide?.Clear();
+                    hatsThatHide = null;
+                    hatsToHide?.Clear();
+                    hatsToHide = null;
                 }
             }
         }
