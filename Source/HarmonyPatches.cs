@@ -272,7 +272,7 @@ namespace ShowHair
                         hideHair = false;
                         showHat = false;
                         hideBeard = false;
-                        Log.Error($"4  hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
+                        //Log.Error($"4  hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
                         return;
                     }
                     if (Settings.HatsThatHide.TryGetValue(def, out hide) && hide)
@@ -280,7 +280,7 @@ namespace ShowHair
                         hideHair = true;
                         showHat = true;
                         hideBeard = true;
-                        Log.Error($"5  hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
+                        //Log.Error($"5  hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
                         return;
                     }
                 }
@@ -290,11 +290,11 @@ namespace ShowHair
                 hideHair = true;
                 showHat = true;
                 hideBeard = true;
-                Log.Error($"6  hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
+                //Log.Error($"6  hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
                 return;
             }
 
-            Log.Error($"7  hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
+            //Log.Error($"7  hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
         }
 #if DEBUG && TRANSPILER
         static void printTranspiler(CodeInstruction i, string pre = "")
