@@ -81,6 +81,7 @@ namespace ShowHair
                 Widgets.CheckboxLabeled(new Rect(0, y, 250, 22), "ShowHair.ShowHatsOnlyWhenDrafted".Translate(), ref Settings.ShowHatsOnlyWhenDrafted);
                 y += 40;
 
+                /* underground
                 if (!Settings.ShowHatsOnlyWhenDrafted)
                 {
                     Widgets.CheckboxLabeled(new Rect(0, y, 250, 22), "ShowHair.HideHatsIndoors".Translate(), ref Settings.HideHatsIndoors);
@@ -94,7 +95,7 @@ namespace ShowHair
                         Widgets.CheckboxLabeled(new Rect(10, y, 300, 22), "ShowHair.ShowHatsUnderNaturalRoof".Translate(), ref Settings.HideHatsNaturalRoof);
                         y += 30;
                     }
-                }
+                }*/
 
                 DrawTable(0f, y, 300f, ref scrollPosition, ref previousHatY, "ShowHair.HatsHideHideHair", new List<ThingDef>(Settings.HatsThatHide.Keys), Settings.HatsToHide, Settings.HatsThatHide);
                 DrawTable(340f, y, 300f, ref scrollPosition2, ref previousHairY, "ShowHair.HairThatWillBeHidden", new List<HairDef>(Settings.HairToHide.Keys), Settings.HairToHide);
