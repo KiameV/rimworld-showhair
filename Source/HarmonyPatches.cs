@@ -267,6 +267,7 @@ namespace ShowHair
                 hideHair = false;
                 hideBeard = false;
                 //Log.Error($"2  hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
+                return;
             }
 
             if (Settings.ShowHatsOnlyWhenDrafted)
