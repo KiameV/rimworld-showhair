@@ -92,6 +92,20 @@ namespace ShowHair
             }
         }*/
 
+        [HarmonyPatch(typeof(Pawn_DraftController), "set_Drafted")]
+        static class Patch_Pawn_DraftController
+        {
+            static void Postfix(Pawn_DraftController __instance)
+            {
+                var p = __instance.pawn;
+                if (p.IsColonist && !p.Dead && p.def.race.Humanlike)
+                {
+                    PortraitsCache.SetDirty(p);
+                    GlobalTextureAtlasManager.TryMarkPawnFrameSetDirty(p);
+                }
+            }
+        }
+
         [HarmonyPriority(Priority.High)]
         public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
@@ -112,12 +126,14 @@ namespace ShowHair
                 {
                     found = true;
 
+                    // Override this instruction as it's the goto for the end of the if clause
                     il[i].opcode = OpCodes.Ldloca_S;
-                    il[i].operand = 3;
+                    il[i].operand = 2;
                     yield return il[i];
-                    yield return new CodeInstruction(OpCodes.Ldloca_S, operand: 4);
-                    yield return new CodeInstruction(OpCodes.Ldloca_S, operand: 5);
+                    yield return new CodeInstruction(OpCodes.Ldloca_S, 3);
+                    yield return new CodeInstruction(OpCodes.Ldloca_S, 4);
                     yield return new CodeInstruction(OpCodes.Call, hideHats);
+                    // Create the overridden instruction
                     yield return new CodeInstruction(OpCodes.Call, get_IdeologyActive);
                     ++i;
 
@@ -137,9 +153,9 @@ namespace ShowHair
                 return;
 
             isDrafted =
-                Settings.ShowHatsOnlyWhenDrafted &&
                 pawn.Faction == Faction.OfPlayer &&
-                pawn.RaceProps.Humanlike;
+                pawn.RaceProps.Humanlike && 
+                pawn.Drafted;
 
             apparelGraphics = __instance.graphics.apparelGraphics;
 
@@ -235,25 +251,30 @@ namespace ShowHair
             {
                 showHat = false;
                 hideBeard = false;
+                //Log.Error($"0  hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
                 return;
             }
 
             if (Settings.OnlyApplyToColonists && pawn.Faction != Faction.OfPlayer)
             {
+                //Log.Error($"1  hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
                 return;
             }
 
             if (Settings.HideAllHats)
             {
                 showHat = false;
+                hideHair = false;
                 hideBeard = false;
-                return;
+                //Log.Error($"2  hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
             }
 
             if (Settings.ShowHatsOnlyWhenDrafted)
             {
                 showHat = isDrafted;
-                if (!showHat) {
+                if (!showHat)
+                {
+                    hideHair = false;
                     hideBeard = false;
                 }
             }

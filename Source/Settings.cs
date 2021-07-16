@@ -368,6 +368,17 @@ namespace ShowHair
 
             if (Scribe.mode == LoadSaveMode.Saving)
             {
+                if (Current.Game != null)
+                {
+                    foreach (var p in PawnsFinder.AllMaps) {
+                        if (p.IsColonist && !p.Dead && p.def.race.Humanlike)
+                        {
+                            PortraitsCache.SetDirty(p);
+                            GlobalTextureAtlasManager.TryMarkPawnFrameSetDirty(p);
+                        }
+                    }
+                }
+
                 hatsThatHide = new List<string>();
                 foreach (KeyValuePair<ThingDef, bool> kv in HatsThatHide)
                     if (kv.Value)
