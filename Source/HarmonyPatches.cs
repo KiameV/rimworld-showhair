@@ -42,6 +42,20 @@ namespace ShowHair
         }
     }
 
+    [HarmonyPatch(typeof(Pawn_DraftController), "set_Drafted")]
+    static class Patch_Pawn_DraftController
+    {
+        static void Postfix(Pawn_DraftController __instance)
+        {
+            var p = __instance.pawn;
+            if (p.IsColonist && !p.Dead && p.def.race.Humanlike)
+            {
+                PortraitsCache.SetDirty(p);
+                GlobalTextureAtlasManager.TryMarkPawnFrameSetDirty(p);
+            }
+        }
+    }
+
     [HarmonyPatch(typeof(PawnRenderer), "DrawHeadHair")]
     public static class Patch_PawnRenderer_DrawHeadHair
     {
@@ -92,21 +106,7 @@ namespace ShowHair
             }
         }*/
 
-        [HarmonyPatch(typeof(Pawn_DraftController), "set_Drafted")]
-        static class Patch_Pawn_DraftController
-        {
-            static void Postfix(Pawn_DraftController __instance)
-            {
-                var p = __instance.pawn;
-                if (p.IsColonist && !p.Dead && p.def.race.Humanlike)
-                {
-                    PortraitsCache.SetDirty(p);
-                    GlobalTextureAtlasManager.TryMarkPawnFrameSetDirty(p);
-                }
-            }
-        }
-
-        [HarmonyPriority(Priority.High)]
+        [HarmonyPriority(Priority.VeryHigh)]
         public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
             List<CodeInstruction> il = instructions.ToList();
@@ -132,6 +132,7 @@ namespace ShowHair
                     yield return il[i];
                     yield return new CodeInstruction(OpCodes.Ldloca_S, 3);
                     yield return new CodeInstruction(OpCodes.Ldloca_S, 4);
+                    yield return new CodeInstruction(OpCodes.Ldarg_S, "bodyFacing");
                     yield return new CodeInstruction(OpCodes.Call, hideHats);
                     // Create the overridden instruction
                     yield return new CodeInstruction(OpCodes.Call, get_IdeologyActive);
@@ -146,6 +147,7 @@ namespace ShowHair
             }
         }
 
+        [HarmonyPriority(Priority.First)]
         public static void Prefix(PawnRenderer __instance, Pawn ___pawn, Vector3 rootLoc, Vector3 headOffset, float angle, Rot4 bodyFacing, Rot4 headFacing, RotDrawMode bodyDrawType, PawnRenderFlags flags)
         {
             pawn = ___pawn;
@@ -241,7 +243,7 @@ namespace ShowHair
 
         //private static Dictionary<Pawn, bool> previousHatConfig = new Dictionary<Pawn, bool>();
 
-        public static void HideHats(ref bool hideHair, ref bool hideBeard, ref bool showHat)
+        public static void HideHats(ref bool hideHair, ref bool hideBeard, ref bool showHat, Rot4 bodyFacing)
         {
             hideHair = false;
 
@@ -250,7 +252,7 @@ namespace ShowHair
                 flags.FlagSet(PawnRenderFlags.Portrait) && Prefs.HatsOnlyOnMap)
             {
                 showHat = false;
-                hideBeard = false;
+                hideBeard = bodyFacing == Rot4.North;
                 //Log.Error($"0  hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
                 return;
             }
@@ -265,7 +267,7 @@ namespace ShowHair
             {
                 showHat = false;
                 hideHair = false;
-                hideBeard = false;
+                hideBeard = bodyFacing == Rot4.North;
                 //Log.Error($"2  hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
                 return;
             }
@@ -276,7 +278,7 @@ namespace ShowHair
                 if (!showHat)
                 {
                     hideHair = false;
-                    hideBeard = false;
+                    hideBeard = bodyFacing == Rot4.North;
                 }
             }
 
@@ -293,7 +295,7 @@ namespace ShowHair
                     {
                         hideHair = false;
                         showHat = false;
-                        hideBeard = false;
+                        hideBeard = bodyFacing == Rot4.North;
                         //Log.Error($"4  hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
                         return;
                     }

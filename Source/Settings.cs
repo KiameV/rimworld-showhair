@@ -22,6 +22,7 @@ namespace ShowHair
         private float previousHatY, previousHairY;
         private FieldInfo wornApparelFI = typeof(Pawn_ApparelTracker).GetField("wornApparel", BindingFlags.NonPublic | BindingFlags.Instance);
         private FieldInfo innerListFI = typeof(ThingOwner<Apparel>).GetField("innerList", BindingFlags.NonPublic | BindingFlags.Instance);
+        private string leftTableSearchBuffer = "", rightTableSearchBuffer = "";
 
         public SettingsController(ModContentPack content) : base(content)
         {
@@ -97,8 +98,8 @@ namespace ShowHair
                     }
                 }*/
 
-                DrawTable(0f, y, 300f, ref scrollPosition, ref previousHatY, "ShowHair.HatsHideHideHair", new List<ThingDef>(Settings.HatsThatHide.Keys), Settings.HatsToHide, Settings.HatsThatHide);
-                DrawTable(340f, y, 300f, ref scrollPosition2, ref previousHairY, "ShowHair.HairThatWillBeHidden", new List<HairDef>(Settings.HairToHide.Keys), Settings.HairToHide);
+                DrawTable(0f, y, 300f, ref scrollPosition, ref previousHatY, "ShowHair.HatsHideHideHair", ref leftTableSearchBuffer, new List<ThingDef>(Settings.HatsThatHide.Keys), Settings.HatsToHide, Settings.HatsThatHide);
+                DrawTable(340f, y, 300f, ref scrollPosition2, ref previousHairY, "ShowHair.HairThatWillBeHidden", ref rightTableSearchBuffer, new List<HairDef>(Settings.HairToHide.Keys), Settings.HairToHide);
 
                 if (this.mouseOverThingDef != null)
                 {
@@ -108,7 +109,8 @@ namespace ShowHair
                         {
                             if (this.previousHatDef != null)
                             {
-                                this.RemoveApparel(this.spawnedHats[this.previousHatDef]);
+                                if (this.spawnedHats.TryGetValue(this.previousHatDef, out ThingWithComps t))
+                                    this.RemoveApparel(t);
                             }
 
                             this.previousHatDef = this.mouseOverThingDef;
@@ -271,22 +273,29 @@ namespace ShowHair
             GUI.EndGroup();
         }
 
-        private void DrawTable<T>(float x, float y, float width, ref Vector2 scroll, ref float innerY, string header, ICollection<T> labels, Dictionary<T, bool> items, Dictionary<T, bool> items2 = null) where T : Def
+        private void DrawTable<T>(float x, float y, float width, ref Vector2 scroll, ref float innerY, string header, ref string searchBuffer, ICollection<T> labels, Dictionary<T, bool> items, Dictionary<T, bool> items2 = null) where T : Def
         {
             const float ROW_HEIGHT = 28;
             GUI.BeginGroup(new Rect(x, y, width, 400));
             Text.Font = GameFont.Medium;
             Widgets.Label(new Rect(0, 0, width, 40), header.Translate());
             Rect rect = new Rect(0, 0, width - 16, innerY);
-            Widgets.BeginScrollView(new Rect(0, 50, width, 280), ref scroll, rect);
+            searchBuffer = Widgets.TextArea(new Rect(0, 40f, 200f, 28f), searchBuffer);
+            if (Widgets.ButtonText(new Rect(220, 40, 28, 28), "X"))
+                searchBuffer = "";
+            Widgets.BeginScrollView(new Rect(0, 75, width, 300), ref scroll, rect);
             Text.Font = GameFont.Small;
 
             bool isMouseInside = Mouse.IsOver(rect);
 
+            innerY = 0;
             int index = 0;
             bool b, orig;
             foreach (T t in labels)
             {
+                if (searchBuffer != "" && !t.label.ToLower().Contains(searchBuffer))
+                    continue;
+
                 innerY = index * ROW_HEIGHT;
                 ++index;
 
