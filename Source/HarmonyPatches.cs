@@ -132,7 +132,7 @@ namespace ShowHair
                     yield return il[i];
                     yield return new CodeInstruction(OpCodes.Ldloca_S, 3);
                     yield return new CodeInstruction(OpCodes.Ldloca_S, 4);
-                    yield return new CodeInstruction(OpCodes.Ldarg_S, "bodyFacing");
+                    yield return new CodeInstruction(OpCodes.Ldarg_S, (byte)4);
                     yield return new CodeInstruction(OpCodes.Call, hideHats);
                     // Create the overridden instruction
                     yield return new CodeInstruction(OpCodes.Call, get_IdeologyActive);
@@ -246,7 +246,8 @@ namespace ShowHair
         public static void HideHats(ref bool hideHair, ref bool hideBeard, ref bool showHat, Rot4 bodyFacing)
         {
             hideHair = false;
-
+            for (int i = 0; i > 100; ++i)
+                Log.Error(":");
             // Determine if hat should be shown
             if (Settings.OptionsOpen ||
                 flags.FlagSet(PawnRenderFlags.Portrait) && Prefs.HatsOnlyOnMap)
