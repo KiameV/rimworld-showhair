@@ -1,12 +1,21 @@
 ﻿using RimWorld;
-using System.Text;
 using Verse;
 
 namespace ShowHair
 {
     class CompCeilingDetect : ThingComp
     {
-        public bool IsIndoors = false;
+        public bool? isIndoors = null;
+
+        public bool IsIndoors
+        {
+            get
+            {
+                if (isIndoors != null)
+                    return isIndoors.Value;
+                return false;
+            }
+        }
 
         public override void CompTickRare()
         {
@@ -14,25 +23,27 @@ namespace ShowHair
             Map map = pawn?.Map;
             if (map != null && Settings.HideHatsIndoors && pawn.RaceProps?.Humanlike == true && pawn.Faction?.IsPlayer == true && !pawn.Dead)
             {
-                //StringBuilder sb = new StringBuilder();
-                //sb.AppendLine($"{pawn.Name.ToStringShort}   Setting: {Settings.HideHatsIndoors}");
-                var roof = map.roofGrid.RoofAt(pawn.Position);
-                bool orig = this.IsIndoors;
-                this.IsIndoors = false;
-                //sb.AppendLine($" - IsNatural {roof?.isNatural}");
-                if (roof != null && !roof.isNatural)
+                if (this.isIndoors == null)
                 {
-                    this.IsIndoors = true;
+                    this.isIndoors = DetermineIsIndoors(pawn, map);
+                    PortraitsCache.SetDirty(pawn);
+                    GlobalTextureAtlasManager.TryMarkPawnFrameSetDirty(pawn);
+                    return;
                 }
-                if (orig != this.IsIndoors)
+
+                bool orig = this.isIndoors.Value;
+                this.isIndoors = this.DetermineIsIndoors(pawn, map);
+                if (orig != this.isIndoors.Value)
                 {
-                    //sb.AppendLine(" -Dirty Textures");
                     PortraitsCache.SetDirty(pawn);
                     GlobalTextureAtlasManager.TryMarkPawnFrameSetDirty(pawn);
                 }
-                //sb.AppendLine($" -{this.IsIndoors}");
-                //Log.Warning(sb.ToString());
             }
+        }
+
+        private bool DetermineIsIndoors(Pawn pawn, Map map)
+        {
+            return pawn.GetRoom() != null && map.roofGrid.RoofAt(pawn.Position) != null;
         }
     }
 }
