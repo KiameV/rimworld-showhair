@@ -32,5 +32,8 @@ Code:
         <downloadUrl>https://github.com/pardeike/HarmonyRimWorld/releases/latest</downloadUrl>
     </li>
 </modDependencies>
+<incompatibleWith>
+	<li>CETeam.CombatExtended</li>
+</incompatibleWith>
 </ModMetaData>
 

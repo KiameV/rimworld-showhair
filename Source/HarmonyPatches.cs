@@ -15,6 +15,12 @@ namespace ShowHair
     {
         static HarmonyPatches()
         {
+            if (ModLister.GetActiveModWithIdentifier("CETeam.CombatExtended") != null)
+            {
+                Log.Error("[Show Hair With Hats] IS NOT COMPATABLE WITH COMBAT EXTENDED. Disabling this Show Hair With Hats.");
+                return;
+            }
+
             var harmony = new Harmony("com.showhair.rimworld.mod");
             harmony.PatchAll(Assembly.GetExecutingAssembly());
         }
