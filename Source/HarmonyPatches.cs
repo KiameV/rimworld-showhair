@@ -231,10 +231,12 @@ namespace ShowHair
                 return;
             }
 
+            hideHair = false;
+            hideBeard = bodyFacing == Rot4.North;
+
             if (Settings.HideAllHats)
             {
                 showHat = false;
-                hideHair = false;
                 hideBeard = hideHair;
                 if (!hideBeard)
                     hideBeard = bodyFacing == Rot4.North;
@@ -245,62 +247,54 @@ namespace ShowHair
             if (Settings.ShowHatsOnlyWhenDrafted)
             {
                 showHat = isDrafted;
-                hideHair = showHat;
                 //Log.Error($"3 {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
             }
+            else if (showHat && Settings.HideHatsIndoors)
+            {
+                CompCeilingDetect comp = pawn.GetComp<CompCeilingDetect>();
+                if (comp != null && comp.IsIndoors)
+                {
+                    showHat = false;
+                    hideHair = false;
+                    //Log.Error($"finally {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
+                }
+            }
 
-            try
+            bool hide;
+            Apparel apparel;
+            ThingDef def;
+            for (int j = 0; j < apparelGraphics.Count; j++)
             {
-                bool hide;
-                Apparel apparel;
-                ThingDef def;
-                for (int j = 0; j < apparelGraphics.Count; j++)
+                apparel = apparelGraphics[j].sourceApparel;
+                def = apparel.def;
+                if (Settings.IsHeadwear(apparel.def.apparel))
                 {
-                    apparel = apparelGraphics[j].sourceApparel;
-                    def = apparel.def;
-                    if (Settings.IsHeadwear(apparel.def.apparel))
+                    if (Settings.HatsToHide.TryGetValue(def, out hide) && hide)
                     {
-                        if (Settings.HatsToHide.TryGetValue(def, out hide) && hide)
-                        {
-                            hideHair = false;
-                            showHat = false;
-                            //Log.Error($"4 {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
-                            return;
-                        }
-                        if (Settings.HatsThatHide.TryGetValue(def, out hide) && hide)
-                        {
-                            hideHair = true;
-                            showHat = true;
-                            //Log.Error($"5 {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
-                            return;
-                        }
-                    }
-                }
-                if (Settings.HairToHide.TryGetValue(pawn.story.hairDef, out hide) && hide)
-                {
-                    hideHair = true;
-                    showHat = true;
-                    //Log.Error($"6 {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
-                    return;
-                }
-            }
-            finally
-            {
-                if (showHat && Settings.HideHatsIndoors && 
-                    (Settings.ShowHatsOnlyWhenDrafted == false || !pawn.Drafted))
-                {
-                    CompCeilingDetect comp = pawn.GetComp<CompCeilingDetect>();
-                    if (comp != null && comp.IsIndoors)
-                    {
-                        showHat = false;
                         hideHair = false;
-                        //Log.Error($"finally {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
+                        showHat = false;
+                        //Log.Error($"4 {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
+                        return;
+                    }
+                    if (Settings.HatsThatHide.TryGetValue(def, out hide) && hide)
+                    {
+                        hideHair = true;
+                        showHat = true;
+                        //Log.Error($"5 {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
+                        return;
                     }
                 }
-                hideBeard = hideHair;
-                if (!hideBeard)
-                    hideBeard = bodyFacing == Rot4.North;
             }
+            if (Settings.HairToHide.TryGetValue(pawn.story.hairDef, out hide) && hide)
+            {
+                hideHair = true;
+                showHat = true;
+                //Log.Error($"6 {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
+                return;
+            }
+            hideBeard = hideHair;
+            if (!hideBeard)
+                hideBeard = bodyFacing == Rot4.North;
 
             //Log.Error($"{pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
         }
