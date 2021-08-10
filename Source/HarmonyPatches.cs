@@ -224,10 +224,17 @@ namespace ShowHair
                 return;
             }
 
-            if (showHat == false || hideHair == false ||
+            if (showHat == false ||
                 Settings.OnlyApplyToColonists && pawn.Faction.IsPlayer == false)
             {
                 //Log.Error($"1 {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
+                return;
+            }
+
+            if (hideHair == false)
+            {
+                CheckHideHat(ref hideHair, ref showHat, true);
+                //Log.Error($"2 {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
                 return;
             }
 
@@ -240,14 +247,14 @@ namespace ShowHair
                 hideBeard = hideHair;
                 if (!hideBeard)
                     hideBeard = bodyFacing == Rot4.North;
-                //Log.Error($"2 {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
+                //Log.Error($"3 {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
                 return;
             }
 
             if (Settings.ShowHatsOnlyWhenDrafted)
             {
                 showHat = isDrafted;
-                //Log.Error($"3 {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
+                //Log.Error($"4.a {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
             }
             else if (showHat && Settings.HideHatsIndoors)
             {
@@ -256,10 +263,28 @@ namespace ShowHair
                 {
                     showHat = false;
                     hideHair = false;
-                    //Log.Error($"finally {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
+                    //Log.Error($"4.b {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
                 }
             }
 
+            if (Settings.HairToHide.TryGetValue(pawn.story.hairDef, out bool hide) && hide)
+            {
+                hideHair = true;
+                showHat = true;
+                //Log.Error($"5 {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
+                return;
+            }
+
+            CheckHideHat(ref hideHair, ref showHat, false);
+            hideBeard = hideHair;
+            if (!hideBeard)
+                hideBeard = bodyFacing == Rot4.North;
+
+            //Log.Error($"Final {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
+        }
+
+        private static void CheckHideHat(ref bool hideHair, ref bool showHat, bool skipHatsThatHide)
+        {
             bool hide;
             Apparel apparel;
             ThingDef def;
@@ -267,36 +292,25 @@ namespace ShowHair
             {
                 apparel = apparelGraphics[j].sourceApparel;
                 def = apparel.def;
-                if (Settings.IsHeadwear(apparel.def.apparel))
+                if (Settings.IsHeadwear(apparel.def.apparel.LastLayer))
                 {
+                    //Log.Error("Last Layer " + def.defName);
                     if (Settings.HatsToHide.TryGetValue(def, out hide) && hide)
                     {
                         hideHair = false;
                         showHat = false;
-                        //Log.Error($"4 {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
+                        //Log.Error($"6 {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
                         return;
                     }
-                    if (Settings.HatsThatHide.TryGetValue(def, out hide) && hide)
+                    if (!skipHatsThatHide && Settings.HatsThatHide.TryGetValue(def, out hide) && hide)
                     {
                         hideHair = true;
                         showHat = true;
-                        //Log.Error($"5 {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
+                        //Log.Error($"7 {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
                         return;
                     }
                 }
             }
-            if (Settings.HairToHide.TryGetValue(pawn.story.hairDef, out hide) && hide)
-            {
-                hideHair = true;
-                showHat = true;
-                //Log.Error($"6 {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
-                return;
-            }
-            hideBeard = hideHair;
-            if (!hideBeard)
-                hideBeard = bodyFacing == Rot4.North;
-
-            //Log.Error($"{pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
         }
 
 #if DEBUG && TRANSPILER
@@ -330,5 +344,5 @@ namespace ShowHair
             return sb.ToString();
         }
 #endif
-            }
+    }
 }

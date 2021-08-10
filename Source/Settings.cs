@@ -438,7 +438,7 @@ namespace ShowHair
                     ++defCount;
 
                     if (d.apparel != null &&
-                        IsHeadwear(d.apparel) &&
+                        IsHeadwear(d.apparel.LastLayer) &&
                         !String.IsNullOrEmpty(d.apparel.wornGraphicPath))
                     {
                         HatsThatHide[d] = hatsThatHide?.Contains(d.defName) == true;
@@ -479,9 +479,10 @@ namespace ShowHair
             }
         }
 
-        public static bool IsHeadwear(ApparelProperties apparelProperties)
+        public static bool IsHeadwear(ApparelLayerDef d)
         {
-            if (apparelProperties.LastLayer == ApparelLayerDefOf.Overhead)
+            return d == ApparelLayerDefOf.Overhead || d == ApparelLayerDefOf.EyeCover;
+            /*if (apparelProperties.LastLayer == ApparelLayerDefOf.Overhead || apparelProperties.LastLayer == ApparelLayerDefOf.EyeCover)
             {
                 return true;
             }
@@ -493,7 +494,7 @@ namespace ShowHair
                     return true;
                 }
             }
-            return false;
+            return false;*/
         }
     }
 }
