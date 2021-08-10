@@ -80,22 +80,26 @@ namespace ShowHair
             if (!Settings.HideAllHats)
             {
                 Widgets.CheckboxLabeled(new Rect(0, y, 250, 22), "ShowHair.ShowHatsOnlyWhenDrafted".Translate(), ref Settings.ShowHatsOnlyWhenDrafted);
-                y += 40;
+                y += 30;
 
                 if (!Settings.ShowHatsOnlyWhenDrafted)
                 {
                     Widgets.CheckboxLabeled(new Rect(0, y, 250, 22), "ShowHair.HideHatsIndoors".Translate(), ref Settings.HideHatsIndoors);
                     y += 30;
-                    /*if (Settings.HideHatsIndoors)
+                    /*
                     {
-                        Widgets.CheckboxLabeled(new Rect(10, y, 300, 22), "ShowHair.UpdatePortrait".Translate(), ref Settings.UpdatePortrait);
-                        y += 30;
-                        Widgets.CheckboxLabeled(new Rect(10, y, 300, 22), "ShowHair.HideHatsIndoorsShowWhenDrafted".Translate(), ref Settings.ShowHatsWhenDraftedIndoors);
-                        y += 30;
-                        Widgets.CheckboxLabeled(new Rect(10, y, 300, 22), "ShowHair.ShowHatsUnderNaturalRoof".Translate(), ref Settings.HideHatsNaturalRoof);
-                        y += 30;
+                        if (Settings.HideHatsIndoors)
+                        {
+                            Widgets.CheckboxLabeled(new Rect(10, y, 300, 22), "ShowHair.UpdatePortrait".Translate(), ref Settings.UpdatePortrait);
+                            y += 30;
+                            Widgets.CheckboxLabeled(new Rect(10, y, 300, 22), "ShowHair.HideHatsIndoorsShowWhenDrafted".Translate(), ref Settings.ShowHatsWhenDraftedIndoors);
+                            y += 30;
+                            Widgets.CheckboxLabeled(new Rect(10, y, 300, 22), "ShowHair.ShowHatsUnderNaturalRoof".Translate(), ref Settings.HideHatsNaturalRoof);
+                            y += 30;
+                        }
                     }*/
                 }
+                y += 10;
 
                 DrawTable(0f, y, 300f, ref scrollPosition, ref previousHatY, "ShowHair.HatsHideHideHair", ref leftTableSearchBuffer, new List<ThingDef>(Settings.HatsThatHide.Keys), Settings.HatsToHide, Settings.HatsThatHide);
                 DrawTable(340f, y, 300f, ref scrollPosition2, ref previousHairY, "ShowHair.HairThatWillBeHidden", ref rightTableSearchBuffer, new List<HairDef>(Settings.HairToHide.Keys), Settings.HairToHide);
@@ -184,10 +188,6 @@ namespace ShowHair
                 {
                     Widgets.Label(new Rect(650f, y + 150f, 200, 30), "ShowHair.StartGameToSeePawn".Translate());
                 }
-            }
-            else
-            {
-                Settings.ShowHatsOnlyWhenDrafted = false;
             }
         }
 
