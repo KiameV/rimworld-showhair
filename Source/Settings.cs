@@ -482,19 +482,6 @@ namespace ShowHair
         public static bool IsHeadwear(ApparelLayerDef d)
         {
             return d == ApparelLayerDefOf.Overhead || d == ApparelLayerDefOf.EyeCover;
-            /*if (apparelProperties.LastLayer == ApparelLayerDefOf.Overhead || apparelProperties.LastLayer == ApparelLayerDefOf.EyeCover)
-            {
-                return true;
-            }
-            for (int i = 0; i < apparelProperties.bodyPartGroups.Count; ++i)
-            {
-                var group = apparelProperties.bodyPartGroups[i];
-                if (group == BodyPartGroupDefOf.FullHead || group == BodyPartGroupDefOf.UpperHead || group == BodyPartGroupDefOf.Eyes)
-                {
-                    return true;
-                }
-            }
-            return false;*/
         }
     }
 }
