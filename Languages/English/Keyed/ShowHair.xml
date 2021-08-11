@@ -16,7 +16,12 @@
 	<ShowHair.GreenHairColor>G</ShowHair.GreenHairColor>
 	
 	<!-- 1.3 -->
-	<ShowHair.HatsHideHideHair>Hats - To Hide / That Hide Hair</ShowHair.HatsHideHideHair>
+	<ShowHair.Hats>Hats (HH = Hide Hair | SH = Show Hair)</ShowHair.Hats>
+	<ShowsHair>Show Hair</ShowsHair>
+	<HideHat>Hide Hat</HideHat>
+	<HidesHair>Hide Hair</HidesHair>
+	<OnlyDraftSH>Only Drafted SH</OnlyDraftSH>
+	<OnlyDraftHH>Only Drafted HH</OnlyDraftHH>
 	<ShowHair.HairThatWillBeHidden>Hair That Hats Will Hide</ShowHair.HairThatWillBeHidden>
 	
 	<ShowHair.UseDontShaveHead>Use "Don't Shave Your Hair" hairs</ShowHair.UseDontShaveHead>

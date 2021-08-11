@@ -105,8 +105,8 @@ namespace ShowHair
                 }
                 y += 10;
 
-                DrawTable(0f, y, 300f, ref scrollPosition, ref previousHatY, "ShowHair.HatsHideHideHair", ref leftTableSearchBuffer, new List<ThingDef>(Settings.HatsThatHide.Keys), Settings.HatsToHide, Settings.HatsThatHide);
-                DrawTable(340f, y, 300f, ref scrollPosition2, ref previousHairY, "ShowHair.HairThatWillBeHidden", ref rightTableSearchBuffer, new List<HairDef>(Settings.HairToHide.Keys), Settings.HairToHide);
+                DrawTable(0f, y, 300f, ref scrollPosition, ref previousHatY, "ShowHair.Hats", ref leftTableSearchBuffer, new List<ThingDef>(Settings.HatsThatHide.Keys), null, Settings.HatsThatHide);
+                DrawTable(340f, y, 300f, ref scrollPosition2, ref previousHairY, "ShowHair.HairThatWillBeHidden", ref rightTableSearchBuffer, new List<HairDef>(Settings.HairToHide.Keys), Settings.HairToHide, null);
 
                 if (this.mouseOverThingDef != null)
                 {
@@ -276,24 +276,22 @@ namespace ShowHair
             GUI.EndGroup();
         }
 
-        private void DrawTable<T>(float x, float y, float width, ref Vector2 scroll, ref float innerY, string header, ref string searchBuffer, ICollection<T> labels, Dictionary<T, bool> items, Dictionary<T, bool> items2 = null) where T : Def
+        private void DrawTable<T>(float x, float y, float width, ref Vector2 scroll, ref float innerY, string header, ref string searchBuffer, ICollection<T> labels, Dictionary<T, bool> items, Dictionary<T, HatHideEnum> items2 = null) where T : Def
         {
-            const float ROW_HEIGHT = 28;
+            Text.Font = GameFont.Small;
+            const float ROW_HEIGHT = 32;
             GUI.BeginGroup(new Rect(x, y, width, 400));
-            Text.Font = GameFont.Medium;
             Widgets.Label(new Rect(0, 0, width, 40), header.Translate());
             Rect rect = new Rect(0, 0, width - 16, innerY);
             searchBuffer = Widgets.TextArea(new Rect(0, 40f, 200f, 28f), searchBuffer);
             if (Widgets.ButtonText(new Rect(220, 40, 28, 28), "X"))
                 searchBuffer = "";
             Widgets.BeginScrollView(new Rect(0, 75, width, 300), ref scroll, rect);
-            Text.Font = GameFont.Small;
 
             bool isMouseInside = Mouse.IsOver(rect);
 
             innerY = 0;
             int index = 0;
-            bool b, orig;
             foreach (T t in labels)
             {
                 if (searchBuffer != "" && !t.label.ToLower().Contains(searchBuffer))
@@ -302,7 +300,7 @@ namespace ShowHair
                 innerY = index * ROW_HEIGHT;
                 ++index;
 
-                rect = new Rect(45f, innerY, 200, ROW_HEIGHT);
+                rect = new Rect(0f, innerY, 184, ROW_HEIGHT);
                 if (isMouseInside)
                 {
                     if (Mouse.IsOver(rect))
@@ -316,30 +314,63 @@ namespace ShowHair
 
                 Widgets.Label(rect, ((this.pawn != null && IsSelected(t)) ? "* " : "") + t.label + ":");
 
-                b = orig = items[t];
-                Widgets.Checkbox(new Vector2(items2 == null ? 240 : 210, innerY - 1), ref b);
-                if (b != orig)
+                if (items != null)
                 {
-                    items[t] = b;
-                    if (this.pawn != null)
-                    {
-                        this.pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
-                        PortraitsCache.SetDirty(this.pawn);
-                    }
-                }
-                if (items2 != null && !b)
-                {
-                    b = orig = items2[t];
-                    Widgets.Checkbox(new Vector2(240, innerY - 1), ref b);
+                    bool b, orig;
+                    b = orig = items[t];
+                    Widgets.Checkbox(new Vector2(210, innerY - 1), ref b);
                     if (b != orig)
                     {
-                        items2[t] = b;
+                        items[t] = b;
                         if (this.pawn != null)
                         {
                             this.pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
                             PortraitsCache.SetDirty(this.pawn);
                         }
                     }
+                }
+                else if (items2 != null)
+                {
+                    Text.Font = GameFont.Tiny;
+                    bool changed = false;
+                    if (Widgets.ButtonText(new Rect(184, innerY, 100, 26), items2[t].ToString().Translate()))
+                    {
+                        List<FloatMenuOption> l = new List<FloatMenuOption>()
+                        {
+                            new FloatMenuOption(HatHideEnum.ShowsHair.ToString().Translate(), () =>
+                            {
+                                items2[t] = HatHideEnum.ShowsHair;
+                                changed = true; 
+                            }),
+                            new FloatMenuOption(HatHideEnum.HideHat.ToString().Translate(), () =>
+                            {
+                                items2[t] = HatHideEnum.HideHat;
+                                changed = true; 
+                            }),
+                            new FloatMenuOption(HatHideEnum.HidesHair.ToString().Translate(), () =>
+                            { 
+                                items2[t] = HatHideEnum.HidesHair;
+                                changed = true; 
+                            }),
+                            new FloatMenuOption(HatHideEnum.OnlyDraftSH.ToString().Translate(), () =>
+                            {
+                                items2[t] = HatHideEnum.OnlyDraftSH;
+                                changed = true; 
+                            }),
+                            new FloatMenuOption(HatHideEnum.OnlyDraftHH.ToString().Translate(), () =>
+                            {
+                                items2[t] = HatHideEnum.OnlyDraftHH;
+                                changed = true; 
+                            }),
+                        };
+                        Find.WindowStack.Add(new FloatMenu(l));
+                    }
+                    if (changed && this.pawn != null)
+                    {
+                        this.pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
+                        PortraitsCache.SetDirty(this.pawn);
+                    }
+                    Text.Font = GameFont.Small;
                 }
             }
             Widgets.EndScrollView();
@@ -355,6 +386,15 @@ namespace ShowHair
         }
     }
 
+    public enum HatHideEnum
+    {
+        ShowsHair,
+        HidesHair,
+        HideHat,
+        OnlyDraftSH,
+        OnlyDraftHH,
+    }
+
     class Settings : ModSettings
     {
         public static bool OnlyApplyToColonists = false;
@@ -368,20 +408,22 @@ namespace ShowHair
 
         public static bool UseDontShaveHead = true;
 
-        public static Dictionary<ThingDef, bool> HatsThatHide = new Dictionary<ThingDef, bool>();
-        public static Dictionary<ThingDef, bool> HatsToHide = new Dictionary<ThingDef, bool>();
+        public static Dictionary<ThingDef, HatHideEnum> HatsThatHide = new Dictionary<ThingDef, HatHideEnum>();
         public static Dictionary<HairDef, bool> HairToHide = new Dictionary<HairDef, bool>();
 
-        private static List<string> hatsThatHide = null;
-        private static List<string> hatsToHide = null;
-        private static List<string> hairToHide = null;
+        private static ToSave ToSave = null;
 
         public override void ExposeData()
         {
             base.ExposeData();
 
+            if (ToSave == null)
+                ToSave = new ToSave();
+
             if (Scribe.mode == LoadSaveMode.Saving)
             {
+                ToSave.Clear();
+
                 if (Current.Game != null)
                 {
                     foreach (var p in PawnsFinder.AllMaps) {
@@ -393,25 +435,38 @@ namespace ShowHair
                     }
                 }
 
-                hatsThatHide = new List<string>();
-                foreach (KeyValuePair<ThingDef, bool> kv in HatsThatHide)
-                    if (kv.Value)
-                        hatsThatHide.Add(kv.Key.defName);
+                foreach (KeyValuePair<ThingDef, HatHideEnum> kv in HatsThatHide)
+                {
+                    switch (kv.Value)
+                    {
+                        case HatHideEnum.HidesHair:
+                            ToSave.hatsThatHideHair.Add(kv.Key.defName);
+                            break;
+                        case HatHideEnum.HideHat:
+                            ToSave.hatsToHide.Add(kv.Key.defName);
+                            break;
+                        case HatHideEnum.OnlyDraftSH:
+                            ToSave.hatsToHideUnlessDraftedSH.Add(kv.Key.defName);
+                            break;
+                        case HatHideEnum.OnlyDraftHH:
+                            ToSave.hatsToHideUnlessDraftedHH.Add(kv.Key.defName);
+                            break;
+                        default: // Nothing
+                            break;
+                    }
+                }
 
-                hatsToHide = new List<string>();
-                foreach (KeyValuePair<ThingDef, bool> kv in HatsToHide)
+                ToSave.hairToHide = new List<string>();
+                foreach(KeyValuePair<HairDef, bool> kv in HairToHide)
                     if (kv.Value)
-                        hatsToHide.Add(kv.Key.defName);
-
-                hairToHide = new List<string>();
-                foreach (KeyValuePair<HairDef, bool> kv in HairToHide)
-                    if (kv.Value)
-                        hairToHide.Add(kv.Key.defName);
+                        ToSave.hairToHide.Add(kv.Key.defName);
             }
 
-            Scribe_Collections.Look(ref hairToHide, "HairToHide", LookMode.Value);
-            Scribe_Collections.Look(ref hatsThatHide, "HatsThatHide", LookMode.Value);
-            Scribe_Collections.Look(ref hatsToHide, "HatsToHide", LookMode.Value);
+            Scribe_Collections.Look(ref ToSave.hatsThatHideHair, "HatsThatHide", LookMode.Value);
+            Scribe_Collections.Look(ref ToSave.hatsToHideUnlessDraftedSH, "HatsToHideUnlessDraftedSH", LookMode.Value);
+            Scribe_Collections.Look(ref ToSave.hatsToHideUnlessDraftedHH, "HatsToHideUnlessDraftedHH", LookMode.Value);
+            Scribe_Collections.Look(ref ToSave.hatsToHide, "HatsToHide", LookMode.Value);
+            Scribe_Collections.Look(ref ToSave.hairToHide, "HairToHide", LookMode.Value);
             Scribe_Values.Look<bool>(ref HideAllHats, "HideAllHats", false, false);
             Scribe_Values.Look<bool>(ref OnlyApplyToColonists, "OnlyApplyToColonists", false, false);
             Scribe_Values.Look<bool>(ref ShowHatsOnlyWhenDrafted, "ShowHatsOnlyWhenDrafted", false, false);
@@ -423,12 +478,8 @@ namespace ShowHair
 
             if (Scribe.mode == LoadSaveMode.Saving)
             {
-                hatsThatHide.Clear();
-                hatsThatHide = null;
-                hatsToHide.Clear();
-                hatsToHide = null;
-                hairToHide.Clear();
-                hairToHide = null;
+                ToSave?.Clear();
+                ToSave = null;
             }
 
             OptionsOpen = false;
@@ -440,6 +491,9 @@ namespace ShowHair
             int defCount = 0;
             if (!isInitialized)
             {
+                if (ToSave == null)
+                    ToSave = new ToSave();
+
                 foreach (ThingDef d in DefDatabase<ThingDef>.AllDefs)
                 {
                     ++defCount;
@@ -448,8 +502,16 @@ namespace ShowHair
                         IsHeadwear(d.apparel) &&
                         !String.IsNullOrEmpty(d.apparel.wornGraphicPath))
                     {
-                        HatsThatHide[d] = hatsThatHide?.Contains(d.defName) == true;
-                        HatsToHide[d] = hatsToHide?.Contains(d.defName) == true;
+                        HatHideEnum e = HatHideEnum.ShowsHair;
+                        if (ToSave.hatsThatHideHair?.Contains(d.defName) == true)
+                            e = HatHideEnum.HidesHair;
+                        else if (ToSave.hatsToHide?.Contains(d.defName) == true)
+                            e = HatHideEnum.HideHat;
+                        else if (ToSave.hatsToHideUnlessDraftedSH?.Contains(d.defName) == true)
+                            e = HatHideEnum.OnlyDraftSH;
+                        else if (ToSave.hatsToHideUnlessDraftedHH?.Contains(d.defName) == true)
+                            e = HatHideEnum.OnlyDraftHH;
+                        HatsThatHide[d] = e;
                     }
                 }
 
@@ -457,9 +519,9 @@ namespace ShowHair
                 {
                     ++defCount;
                     bool selected = false;
-                    if (hairToHide != null)
+                    if (ToSave.hairToHide != null)
                     {
-                        foreach (string s in hairToHide)
+                        foreach (string s in ToSave.hairToHide)
                         {
                             if (s.Equals(d.defName))
                             {
@@ -476,12 +538,8 @@ namespace ShowHair
 
                 if (isInitialized)
                 {
-                    hairToHide?.Clear();
-                    hairToHide = null;
-                    hatsThatHide?.Clear();
-                    hatsThatHide = null;
-                    hatsToHide?.Clear();
-                    hatsToHide = null;
+                    ToSave?.Clear();
+                    ToSave = null;
                 }
             }
         }
@@ -501,6 +559,33 @@ namespace ShowHair
                 }
             }
             return false;
+        }
+    }
+
+    class ToSave
+    {
+        public List<string> hatsThatHideHair = null;
+        public List<string> hatsToHide = null;
+        public List<string> hatsToHideUnlessDraftedSH = null;
+        public List<string> hatsToHideUnlessDraftedHH = null;
+        public List<string> hairToHide = null;
+
+        public ToSave()
+        {
+            hatsThatHideHair = new List<string>();
+            hatsToHide = new List<string>();
+            hatsToHideUnlessDraftedSH = new List<string>();
+            hatsToHideUnlessDraftedHH = new List<string>();
+            hairToHide = new List<string>();
+        }
+
+        public void Clear()
+        {
+            hatsThatHideHair?.Clear();
+            hatsToHide?.Clear();
+            hatsToHideUnlessDraftedSH?.Clear();
+            hatsToHideUnlessDraftedHH?.Clear();
+            hairToHide?.Clear();
         }
     }
 }

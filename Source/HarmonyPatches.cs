@@ -166,7 +166,6 @@ namespace ShowHair
                     // Create the overridden instruction
                     yield return new CodeInstruction(OpCodes.Call, get_IdeologyActive);
                     ++i;
-
                 }
                 if (il[i].opcode == OpCodes.Call && il[i].OperandIs(drawMeshNowOrLater))
                 {
@@ -212,7 +211,7 @@ namespace ShowHair
                 }
 
                 if (showHat == false ||
-                    Settings.OnlyApplyToColonists && pawn.Faction.IsPlayer == false)
+                    Settings.OnlyApplyToColonists && FactionUtility.IsPlayerSafe(pawn.Faction) == false)
                 {
                     //Log.Error($"1 {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
                     return;
@@ -246,6 +245,8 @@ namespace ShowHair
                     {
                         showHat = false;
                         hideHair = false;
+                        if (isDrafted)
+                            CheckHideHat(ref hideHair, ref showHat, true, true);
                         return;
                         //Log.Error($"4.b {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
                     }
@@ -271,9 +272,8 @@ namespace ShowHair
             //Log.Error($"Final {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
         }
 
-        private static void CheckHideHat(ref bool hideHair, ref bool showHat, bool skipHatsThatHide)
+        private static void CheckHideHat(ref bool hideHair, ref bool showHat, bool skipHatsThatHide, bool draftCheckOnly = false)
         {
-            bool hide;
             Apparel apparel;
             ThingDef def;
             for (int j = 0; j < apparelGraphics.Count; j++)
@@ -283,18 +283,39 @@ namespace ShowHair
                 if (Settings.IsHeadwear(apparel.def.apparel))
                 {
                     //Log.Error("Last Layer " + def.defName);
-                    if (Settings.HatsToHide.TryGetValue(def, out hide) && hide)
+                    if (Settings.HatsThatHide.TryGetValue(def, out var e) && e != HatHideEnum.ShowsHair)
                     {
-                        hideHair = false;
-                        showHat = false;
+                        switch(e)
+                        {
+                            case HatHideEnum.HidesHair:
+                                if (!draftCheckOnly)
+                                {
+                                    hideHair = true;
+                                    showHat = true;
+                                }
+                                break;
+                            case HatHideEnum.HideHat:
+                                if (!draftCheckOnly)
+                                {
+                                    hideHair = false;
+                                    showHat = false;
+                                }
+                                break;
+                            case HatHideEnum.OnlyDraftHH:
+                            case HatHideEnum.OnlyDraftSH:
+                                if (pawn.Drafted)
+                                {
+                                    hideHair = e == HatHideEnum.OnlyDraftHH;
+                                    showHat = true;
+                                }
+                                else
+                                {
+                                    hideHair = false;
+                                    showHat = false;
+                                }
+                                break;
+                        }
                         //Log.Error($"6 {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
-                        return;
-                    }
-                    if (!skipHatsThatHide && Settings.HatsThatHide.TryGetValue(def, out hide) && hide)
-                    {
-                        hideHair = true;
-                        showHat = true;
-                        //Log.Error($"7 {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
                         return;
                     }
                 }
