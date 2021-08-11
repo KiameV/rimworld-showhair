@@ -27,6 +27,8 @@ namespace ShowHair
         public SettingsController(ModContentPack content) : base(content)
         {
             Settings = base.GetSettings<Settings>();
+
+            HairUtilityFactory.GetHairUtility();
         }
 
         public override string SettingsCategory()
@@ -75,6 +77,8 @@ namespace ShowHair
             Widgets.CheckboxLabeled(new Rect(0, y, 250, 22), "ShowHair.OnlyApplyToColonists".Translate(), ref Settings.OnlyApplyToColonists);
             y += 30;
             Widgets.CheckboxLabeled(new Rect(0, y, 250, 22), "ShowHair.HideAllHats".Translate(), ref Settings.HideAllHats);
+            y += 30;
+            Widgets.CheckboxLabeled(new Rect(0, y, 250, 22), "ShowHair.UseDontShaveHead".Translate(), ref Settings.UseDontShaveHead);
             y += 30;
 
             if (!Settings.HideAllHats)
@@ -362,6 +366,8 @@ namespace ShowHair
         public static bool OptionsOpen = false;
         public static bool HideHatsNaturalRoof = false;
 
+        public static bool UseDontShaveHead = true;
+
         public static Dictionary<ThingDef, bool> HatsThatHide = new Dictionary<ThingDef, bool>();
         public static Dictionary<ThingDef, bool> HatsToHide = new Dictionary<ThingDef, bool>();
         public static Dictionary<HairDef, bool> HairToHide = new Dictionary<HairDef, bool>();
@@ -413,6 +419,7 @@ namespace ShowHair
             Scribe_Values.Look<bool>(ref HideHatsNaturalRoof, "HideHatsNaturalRoof", false, false);
             Scribe_Values.Look<bool>(ref HideHatsIndoors, "HideHatsIndoors", false, false);
             Scribe_Values.Look<bool>(ref UpdatePortrait, "UpdatePortrait", false, false);
+            Scribe_Values.Look<bool>(ref UseDontShaveHead, "UseDontShaveHead", true, false);
 
             if (Scribe.mode == LoadSaveMode.Saving)
             {
@@ -438,7 +445,7 @@ namespace ShowHair
                     ++defCount;
 
                     if (d.apparel != null &&
-                        IsHeadwear(d.apparel.LastLayer) &&
+                        IsHeadwear(d.apparel) &&
                         !String.IsNullOrEmpty(d.apparel.wornGraphicPath))
                     {
                         HatsThatHide[d] = hatsThatHide?.Contains(d.defName) == true;
@@ -479,9 +486,21 @@ namespace ShowHair
             }
         }
 
-        public static bool IsHeadwear(ApparelLayerDef d)
+        public static bool IsHeadwear(ApparelProperties apparelProperties)
         {
-            return d == ApparelLayerDefOf.Overhead || d == ApparelLayerDefOf.EyeCover;
+            if (apparelProperties.LastLayer == ApparelLayerDefOf.Overhead || apparelProperties.LastLayer == ApparelLayerDefOf.EyeCover)
+            {
+                return true;
+            }
+            for (int i = 0; i < apparelProperties.bodyPartGroups.Count; ++i)
+            {
+                var group = apparelProperties.bodyPartGroups[i];
+                if (group == BodyPartGroupDefOf.FullHead || group == BodyPartGroupDefOf.UpperHead || group == BodyPartGroupDefOf.Eyes)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

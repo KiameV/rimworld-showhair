@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Patch>
+<!--
+	IsHeadDef: defines if the body part group relates to the head
+    CoverageLevel: numeric/enum value to define which def covers the most head
+-->
+	<Operation Class="PatchOperationAddModExtension">
+		<xpath>/Defs/BodyPartGroupDef[not(defName="Teeth" or defName="UpperHead" or defName="FullHead")]</xpath>
+		<value>
+			<li Class="ShowHair.BodyPartGroupDefExtension">
+				<IsHeadDef>false</IsHeadDef>
+				<CoverageLevel>0</CoverageLevel>
+			</li>
+		</value>
+	</Operation>
+	<Operation Class="PatchOperationAddModExtension">
+		<xpath>/Defs/BodyPartGroupDef[defName="Teeth"]</xpath>
+		<value>
+			<li Class="ShowHair.BodyPartGroupDefExtension">
+				<IsHeadDef>true</IsHeadDef>
+				<CoverageLevel>1</CoverageLevel>
+			</li>
+		</value>
+	</Operation>
+	<Operation Class="PatchOperationAddModExtension">
+		<xpath>/Defs/BodyPartGroupDef[defName="UpperHead"]</xpath>
+		<value>
+			<li Class="ShowHair.BodyPartGroupDefExtension">
+				<IsHeadDef>true</IsHeadDef>
+				<CoverageLevel>2</CoverageLevel>
+			</li>
+		</value>
+	</Operation>
+	<Operation Class="PatchOperationAddModExtension">
+		<xpath>/Defs/BodyPartGroupDef[defName="FullHead"]</xpath>
+		<value>
+			<li Class="ShowHair.BodyPartGroupDefExtension">
+				<IsHeadDef>true</IsHeadDef>
+				<CoverageLevel>3</CoverageLevel>
+			</li>
+		</value>
+	</Operation>
+
+</Patch>

@@ -19,6 +19,8 @@
 	<ShowHair.HatsHideHideHair>Hats - To Hide / That Hide Hair</ShowHair.HatsHideHideHair>
 	<ShowHair.HairThatWillBeHidden>Hair That Hats Will Hide</ShowHair.HairThatWillBeHidden>
 	
+	<ShowHair.UseDontShaveHead>Use "Don't Shave Your Hair" hairs</ShowHair.UseDontShaveHead>
+	
 	<!-- 1.2 and older -->
 	<ShowHair.SelectHatsWhichHideHair>Select hats that will hide hair</ShowHair.SelectHatsWhichHideHair>
 	<ShowHair.SelectHairThatWillBeHidden>Select hair that hats will hide</ShowHair.SelectHairThatWillBeHidden>
