@@ -19,6 +19,10 @@ namespace ShowHair
             {
                 Log.Error("[Show Hair With Hats] IS NOT COMPATABLE WITH COMBAT EXTENDED.");
             }
+            if (ModLister.GetActiveModWithIdentifier("velc.HatsDisplaySelection") != null)
+            {
+                Log.Error("[Show Hair With Hats] Consider disabling \"Hats Display Selection\" as that mod may clash with this one.");
+            }
 
             var harmony = new Harmony("com.showhair.rimworld.mod");
             harmony.PatchAll(Assembly.GetExecutingAssembly());
@@ -201,8 +205,7 @@ namespace ShowHair
             {
                 //Log.Error($"Start {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
                 // Determine if hat should be shown
-                if (Settings.OptionsOpen ||
-                    flags.FlagSet(PawnRenderFlags.Portrait) && Prefs.HatsOnlyOnMap)
+                if (flags.FlagSet(PawnRenderFlags.Portrait) && Prefs.HatsOnlyOnMap)
                 {
                     showHat = false;
                     hideHair = false;
@@ -211,7 +214,7 @@ namespace ShowHair
                 }
 
                 if (showHat == false ||
-                    Settings.OnlyApplyToColonists && FactionUtility.IsPlayerSafe(pawn.Faction) == false)
+                    Settings.OnlyApplyToColonists && FactionUtility.IsPlayerSafe(pawn.Faction) == false && !Settings.OptionsOpen)
                 {
                     //Log.Error($"1 {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
                     return;

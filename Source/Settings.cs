@@ -105,8 +105,8 @@ namespace ShowHair
                 }
                 y += 10;
 
-                DrawTable(0f, y, 300f, ref scrollPosition, ref previousHatY, "ShowHair.Hats", ref leftTableSearchBuffer, new List<ThingDef>(Settings.HatsThatHide.Keys), null, Settings.HatsThatHide);
-                DrawTable(340f, y, 300f, ref scrollPosition2, ref previousHairY, "ShowHair.HairThatWillBeHidden", ref rightTableSearchBuffer, new List<HairDef>(Settings.HairToHide.Keys), Settings.HairToHide, null);
+                DrawTable(0f, y, 320f, ref scrollPosition, ref previousHatY, "ShowHair.Hats", ref leftTableSearchBuffer, Settings.HatsThatHide.Keys, null, Settings.HatsThatHide);
+                DrawTable(340f, y, 300f, ref scrollPosition2, ref previousHairY, "ShowHair.HairThatWillBeHidden", ref rightTableSearchBuffer, Settings.HairToHide.Keys, Settings.HairToHide, null);
 
                 if (this.mouseOverThingDef != null)
                 {
@@ -137,7 +137,7 @@ namespace ShowHair
                     }
                     else
                     {
-                        Widgets.ThingIcon(new Rect(700f, y + 50, 50, 50), this.mouseOverThingDef);
+                        //Widgets.ThingIcon(new Rect(700f, y + 50, 50, 50), this.mouseOverThingDef);
                     }
                 }
                 if (this.pawn != null && this.mouseOverHairDef != null)
@@ -300,7 +300,14 @@ namespace ShowHair
                 innerY = index * ROW_HEIGHT;
                 ++index;
 
-                rect = new Rect(0f, innerY, 184, ROW_HEIGHT);
+                float innerX = 0;
+                if (t is ThingDef tdd)
+                {
+                    Widgets.ThingIcon(new Rect(x, innerY - 2, ROW_HEIGHT - 2, ROW_HEIGHT - 2), tdd);
+                    innerX += ROW_HEIGHT - 2;
+                }
+
+                rect = new Rect(innerX, innerY, 184, ROW_HEIGHT);
                 if (isMouseInside)
                 {
                     if (Mouse.IsOver(rect))
@@ -311,14 +318,14 @@ namespace ShowHair
                             this.mouseOverHairDef = hd;//GraphicDatabase.Get<Graphic_Multi>(hd.texPath, ShaderDatabase.Transparent, Vector2.one, Color.white);
                     }
                 }
-
                 Widgets.Label(rect, ((this.pawn != null && IsSelected(t)) ? "* " : "") + t.label + ":");
+                innerX += 184;
 
                 if (items != null)
                 {
                     bool b, orig;
                     b = orig = items[t];
-                    Widgets.Checkbox(new Vector2(210, innerY - 1), ref b);
+                    Widgets.Checkbox(new Vector2(innerX, innerY - 1), ref b);
                     if (b != orig)
                     {
                         items[t] = b;
@@ -333,7 +340,7 @@ namespace ShowHair
                 {
                     Text.Font = GameFont.Tiny;
                     bool changed = false;
-                    if (Widgets.ButtonText(new Rect(184, innerY, 100, 26), items2[t].ToString().Translate()))
+                    if (Widgets.ButtonText(new Rect(innerX, innerY, 90, 26), items2[t].ToString().Translate()))
                     {
                         List<FloatMenuOption> l = new List<FloatMenuOption>()
                         {

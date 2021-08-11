@@ -41,17 +41,24 @@ namespace ShowHair
 			//returns a custom hair texture based on the current hair texture
 			public bool TryGetCustomHairMat(Pawn pawn, Rot4 facing, out Material mat)
 			{
-				var maxCoverageDef = this.getMaxCoverageDef(pawn); //find the def with max coverage
+				try
+				{
+					var maxCoverageDef = this.getMaxCoverageDef(pawn); //find the def with max coverage
 
-				//using IsHeadDef as the key to return a HeadCoverage type i.e. covered or not covered
-				var headCoverage = this.headCoverages[maxCoverageDef.GetModExtension<BodyPartGroupDefExtension>().IsHeadDef];
+					//using IsHeadDef as the key to return a HeadCoverage type i.e. covered or not covered
+					var headCoverage = this.headCoverages[maxCoverageDef.GetModExtension<BodyPartGroupDefExtension>().IsHeadDef];
 
-				//passing in the pawn & coverage level to get the custom texture path
-				string texPath = headCoverage.GetTexPath(pawn, maxCoverageDef.GetModExtension<BodyPartGroupDefExtension>().CoverageLevel);
-				if (texPath == null)
+					//passing in the pawn & coverage level to get the custom texture path
+					string texPath = headCoverage.GetTexPath(pawn, maxCoverageDef.GetModExtension<BodyPartGroupDefExtension>().CoverageLevel);
+					if (texPath == null)
+						mat = null;
+					else
+						mat = GraphicDatabase.Get<Graphic_Multi>(texPath, ShaderDatabase.Cutout, Vector2.one, pawn.story.hairColor).MatAt(facing); // Set new graphic
+				}
+				catch
+                {
 					mat = null;
-				else
-					mat = GraphicDatabase.Get<Graphic_Multi>(texPath, ShaderDatabase.Cutout, Vector2.one, pawn.story.hairColor).MatAt(facing); // Set new graphic
+                }
 				return mat != null;
 			}
 
