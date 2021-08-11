@@ -77,8 +77,6 @@
   <ItemGroup>
     <Compile Include="CeilingDetectComp.cs" />
     <Compile Include="DontShaveHead\BodyPartGroupDefs.cs" />
-    <Compile Include="DontShaveHead\FallbackTextureListDef.cs" />
-    <Compile Include="DontShaveHead\HairDefOf.cs" />
     <Compile Include="DontShaveHead\HairUtility.cs" />
     <Compile Include="DontShaveHead\HeadCoverage.cs" />
     <Compile Include="DontShaveHead\TextureUtility.cs" />
