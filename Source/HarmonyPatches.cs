@@ -220,9 +220,9 @@ namespace ShowHair
                     return;
                 }
 
-                if (hideHair == false)
+                if (hideHair == false && showHat == false)
                 {
-                    CheckHideHat(ref hideHair, ref showHat, true);
+                    CheckHideHat(ref hideHair, ref showHat, false);
                     //Log.Error($"2 {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
                     return;
                 }
@@ -249,13 +249,13 @@ namespace ShowHair
                         showHat = false;
                         hideHair = false;
                         if (isDrafted)
-                            CheckHideHat(ref hideHair, ref showHat, true, true);
+                            CheckHideHat(ref hideHair, ref showHat, true);
                         return;
                         //Log.Error($"4.b {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
                     }
                 }
 
-                if (Settings.HairToHide.TryGetValue(pawn.story.hairDef, out bool hide) && hide)
+                if (pawn.story?.hairDef != null && Settings.HairToHide.TryGetValue(pawn.story.hairDef, out bool hide) && hide)
                 {
                     hideHair = true;
                     showHat = true;
@@ -275,18 +275,17 @@ namespace ShowHair
             //Log.Error($"Final {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
         }
 
-        private static void CheckHideHat(ref bool hideHair, ref bool showHat, bool skipHatsThatHide, bool draftCheckOnly = false)
+        private static void CheckHideHat(ref bool hideHair, ref bool showHat, bool draftCheckOnly)
         {
             Apparel apparel;
             ThingDef def;
-            for (int j = 0; j < apparelGraphics.Count; j++)
+            for (int j = 0; j < apparelGraphics?.Count; j++)
             {
                 apparel = apparelGraphics[j].sourceApparel;
-                def = apparel.def;
-                if (Settings.IsHeadwear(apparel.def.apparel))
+                if (Settings.IsHeadwear(apparel?.def?.apparel))
                 {
                     //Log.Error("Last Layer " + def.defName);
-                    if (Settings.HatsThatHide.TryGetValue(def, out var e) && e != HatHideEnum.ShowsHair)
+                    if (Settings.HatsThatHide.TryGetValue(apparel.def, out var e) && e != HatHideEnum.ShowsHair)
                     {
                         switch(e)
                         {

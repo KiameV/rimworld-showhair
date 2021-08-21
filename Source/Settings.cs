@@ -505,21 +505,24 @@ namespace ShowHair
                 {
                     ++defCount;
 
-                    if (d.apparel != null &&
-                        IsHeadwear(d.apparel) &&
-                        !String.IsNullOrEmpty(d.apparel.wornGraphicPath))
+                    if (d.apparel == null ||
+                        !IsHeadwear(d.apparel) ||
+                        (String.IsNullOrEmpty(d.apparel.wornGraphicPath) &&
+                         d.apparel.wornGraphicPaths?.Count == 0))
                     {
-                        HatHideEnum e = HatHideEnum.ShowsHair;
-                        if (ToSave.hatsThatHideHair?.Contains(d.defName) == true)
-                            e = HatHideEnum.HidesHair;
-                        else if (ToSave.hatsToHide?.Contains(d.defName) == true)
-                            e = HatHideEnum.HideHat;
-                        else if (ToSave.hatsToHideUnlessDraftedSH?.Contains(d.defName) == true)
-                            e = HatHideEnum.OnlyDraftSH;
-                        else if (ToSave.hatsToHideUnlessDraftedHH?.Contains(d.defName) == true)
-                            e = HatHideEnum.OnlyDraftHH;
-                        HatsThatHide[d] = e;
+                        continue;
                     }
+
+                    HatHideEnum e = HatHideEnum.ShowsHair;
+                    if (ToSave.hatsThatHideHair?.Contains(d.defName) == true)
+                        e = HatHideEnum.HidesHair;
+                    else if (ToSave.hatsToHide?.Contains(d.defName) == true)
+                        e = HatHideEnum.HideHat;
+                    else if (ToSave.hatsToHideUnlessDraftedSH?.Contains(d.defName) == true)
+                        e = HatHideEnum.OnlyDraftSH;
+                    else if (ToSave.hatsToHideUnlessDraftedHH?.Contains(d.defName) == true)
+                        e = HatHideEnum.OnlyDraftHH;
+                    HatsThatHide[d] = e;
                 }
 
                 foreach (HairDef d in DefDatabase<HairDef>.AllDefs)
@@ -553,14 +556,13 @@ namespace ShowHair
 
         public static bool IsHeadwear(ApparelProperties apparelProperties)
         {
+            if (apparelProperties == null)
+                return false;
             if (apparelProperties.LastLayer == ApparelLayerDefOf.Overhead || apparelProperties.LastLayer == ApparelLayerDefOf.EyeCover)
-            {
                 return true;
-            }
-            for (int i = 0; i < apparelProperties.bodyPartGroups.Count; ++i)
+            foreach (var g in apparelProperties.bodyPartGroups)
             {
-                var group = apparelProperties.bodyPartGroups[i];
-                if (group == BodyPartGroupDefOf.FullHead || group == BodyPartGroupDefOf.UpperHead || group == BodyPartGroupDefOf.Eyes)
+                if (g == BodyPartGroupDefOf.FullHead || g == BodyPartGroupDefOf.UpperHead || g == BodyPartGroupDefOf.Eyes)
                 {
                     return true;
                 }
