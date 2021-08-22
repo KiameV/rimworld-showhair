@@ -209,6 +209,7 @@ namespace ShowHair
                 {
                     showHat = false;
                     hideHair = false;
+                    hideBeard = false;
                     //Log.Error($"0 {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
                     return;
                 }
@@ -222,12 +223,13 @@ namespace ShowHair
 
                 if (hideHair == false && showHat == false)
                 {
-                    CheckHideHat(ref hideHair, ref showHat, false);
+                    CheckHideHat(ref hideHair, ref hideBeard, ref showHat, false);
                     //Log.Error($"2 {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
                     return;
                 }
 
                 hideHair = false;
+                hideBeard = false;
 
                 if (Settings.HideAllHats)
                 {
@@ -248,8 +250,7 @@ namespace ShowHair
                     {
                         showHat = false;
                         hideHair = false;
-                        if (isDrafted)
-                            CheckHideHat(ref hideHair, ref showHat, true);
+                        hideBeard = false;
                         return;
                         //Log.Error($"4.b {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
                     }
@@ -258,16 +259,16 @@ namespace ShowHair
                 if (pawn.story?.hairDef != null && Settings.HairToHide.TryGetValue(pawn.story.hairDef, out bool hide) && hide)
                 {
                     hideHair = true;
+                    hideBeard = true;
                     showHat = true;
                     //Log.Error($"5 {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
                     return;
                 }
 
-                CheckHideHat(ref hideHair, ref showHat, false);
+                CheckHideHat(ref hideHair, ref hideBeard, ref showHat, false);
             }
             finally
             {
-                hideBeard = hideHair;
                 if (!hideBeard)
                     hideBeard = bodyFacing == Rot4.North;
                 skipDontShaveHead = !showHat;
@@ -275,10 +276,9 @@ namespace ShowHair
             //Log.Error($"Final {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
         }
 
-        private static void CheckHideHat(ref bool hideHair, ref bool showHat, bool draftCheckOnly)
+        private static void CheckHideHat(ref bool hideHair, ref bool hideBeard, ref bool showHat, bool draftCheckOnly)
         {
             Apparel apparel;
-            ThingDef def;
             for (int j = 0; j < apparelGraphics?.Count; j++)
             {
                 apparel = apparelGraphics[j].sourceApparel;
@@ -289,10 +289,19 @@ namespace ShowHair
                     {
                         switch(e)
                         {
-                            case HatHideEnum.HidesHair:
+                            case HatHideEnum.HidesAllHair:
                                 if (!draftCheckOnly)
                                 {
                                     hideHair = true;
+                                    hideBeard = true;
+                                    showHat = true;
+                                }
+                                break;
+                            case HatHideEnum.HidesHairShowBeard:
+                                if (!draftCheckOnly)
+                                {
+                                    hideHair = true;
+                                    hideBeard = false;
                                     showHat = true;
                                 }
                                 break;
@@ -300,14 +309,27 @@ namespace ShowHair
                                 if (!draftCheckOnly)
                                 {
                                     hideHair = false;
+                                    hideBeard = false;
                                     showHat = false;
                                 }
                                 break;
-                            case HatHideEnum.OnlyDraftHH:
-                            case HatHideEnum.OnlyDraftSH:
+                            default: // Drafted cases
                                 if (pawn.Drafted)
                                 {
-                                    hideHair = e == HatHideEnum.OnlyDraftHH;
+                                    if (e == HatHideEnum.OnlyDraftHH)
+                                    {
+                                        hideHair = true;
+                                        hideBeard = true;
+                                    }
+                                    else if (e == HatHideEnum.OnlyDraftHHSB)
+                                    {
+                                        hideHair = true;
+                                        hideBeard = false;
+                                    }
+                                    else
+                                    {
+                                        hideHair = false;
+                                    }
                                     showHat = true;
                                 }
                                 else
