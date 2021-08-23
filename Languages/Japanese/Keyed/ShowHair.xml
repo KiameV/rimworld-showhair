@@ -2,8 +2,6 @@
 <LanguageData>
   <ShowHair.ShowHair>Show Hair</ShowHair.ShowHair>
   <ShowHair.HideAllHats>帽子を全て隠す</ShowHair.HideAllHats>
-  <ShowHair.SelectHatsWhichHideHair>着用時に髪を隠す帽子を選択</ShowHair.SelectHatsWhichHideHair>
-  <ShowHair.SelectHairThatWillBeHidden>帽子が隠す髪型を選択</ShowHair.SelectHairThatWillBeHidden>
   <ShowHair.ShowHatsOnlyWhenDrafted>徴兵された時だけ帽子を表示する</ShowHair.ShowHatsOnlyWhenDrafted>
   <ShowHair.OnlyApplyToColonists>入植者にだけ適用する</ShowHair.OnlyApplyToColonists>
   <ShowHair.HideHatsIndoors>屋内で帽子を隠す</ShowHair.HideHatsIndoors>
@@ -16,5 +14,23 @@
   <ShowHair.WhiteHairColor>白</ShowHair.WhiteHairColor>
   <ShowHair.YellowHairColor>黄</ShowHair.YellowHairColor>
   <ShowHair.GreenHairColor>緑</ShowHair.GreenHairColor>
+
+  <!-- 1.3 -->
+  <ShowHair.Hats>帽子</ShowHair.Hats>
+  <ShowHair.HatsDesc>HH=髪を隠す|SH=髪を表示|SB=ヒゲを表示</ShowHair.HatsDesc>
+  <ShowsHair>髪を表示</ShowsHair>
+  <HideHat>帽子を隠す</HideHat>
+  <HidesAllHair>髪を全て隠す</HidesAllHair>
+  <HidesHairShowBeard>髪無,ヒゲ表示</HidesHairShowBeard>
+  <OnlyDraftSH>徴兵時髪表示</OnlyDraftSH>
+  <OnlyDraftHH>徴兵時髪隠す</OnlyDraftHH>
+  <OnlyDraftHHSB>徴兵時|HH|SB</OnlyDraftHHSB>
+  <ShowHair.HairThatWillBeHidden>帽子が隠す髪</ShowHair.HairThatWillBeHidden>
+
+  <ShowHair.UseDontShaveHead>Don't Shave Your Hairの髪を使う</ShowHair.UseDontShaveHead>
+
+  <!-- 1.2 and older -->
+  <ShowHair.SelectHatsWhichHideHair>着用時に髪を隠す帽子を選択</ShowHair.SelectHatsWhichHideHair>
+  <ShowHair.SelectHairThatWillBeHidden>帽子が隠す髪型を選択</ShowHair.SelectHairThatWillBeHidden>
 
 </LanguageData>
