@@ -243,7 +243,9 @@ namespace ShowHair
                     showHat = isDrafted;
                     //Log.Error($"4.a {pawn.Name.ToStringShort} hideHair:{hideHair}  hideBeard:{hideBeard}  showHat:{showHat}");
                 }
-                else if (showHat && Settings.HideHatsIndoors)
+                else if (showHat && 
+                        (Settings.Indoors == Indoors.HideHats || 
+                         (Settings.Indoors == Indoors.ShowHatsWhenDrafted && !isDrafted)))
                 {
                     CompCeilingDetect comp = pawn.GetComp<CompCeilingDetect>();
                     if (comp != null && comp.IsIndoors)

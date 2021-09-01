@@ -21,7 +21,11 @@ namespace ShowHair
         {
             Pawn pawn = base.parent as Pawn;
             Map map = pawn?.Map;
-            if (map != null && Settings.HideHatsIndoors && pawn.RaceProps?.Humanlike == true && pawn.Faction?.IsPlayer == true && !pawn.Dead)
+
+            if (Settings.OnlyApplyToColonists && pawn.Faction?.IsPlayer == false)
+                return;
+
+            if (map != null && Settings.Indoors != Indoors.ShowHats && pawn.RaceProps?.Humanlike == true && !pawn.Dead)
             {
                 if (this.isIndoors == null)
                 {
@@ -43,7 +47,8 @@ namespace ShowHair
 
         private bool DetermineIsIndoors(Pawn pawn, Map map)
         {
-            return pawn.GetRoom() != null && map.roofGrid.RoofAt(pawn.Position) != null;
+            var room = pawn.GetRoom();
+            return room != null && room.OpenRoofCount == 0;
         }
     }
 }

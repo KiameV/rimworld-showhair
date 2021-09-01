@@ -9,6 +9,8 @@ namespace ShowHair
 {
     public class SettingsController : Mod
     {
+        const string msgErrorDirty = "[Show Hair] A mod conflict caused an issue re-drawing pawns. See stack trace.";
+
         private Settings Settings;
         private Vector2 scrollPosition = new Vector2(0, 0);
         private Vector2 scrollPosition2 = new Vector2(0, 0);
@@ -59,7 +61,14 @@ namespace ShowHair
                             {
                                 this.pawnBackupHat = t;
                                 this.RemoveApparel(pawnBackupHat);
-                                this.pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
+                                try
+                                {
+                                    this.pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
+                                }
+                                catch
+                                {
+                                    Log.ErrorOnce(msgErrorDirty, msgErrorDirty.GetHashCode());
+                                }
                                 break;
                             }
                         }
@@ -88,7 +97,23 @@ namespace ShowHair
 
                 if (!Settings.ShowHatsOnlyWhenDrafted)
                 {
-                    Widgets.CheckboxLabeled(new Rect(0, y, 250, 22), "ShowHair.HideHatsIndoors".Translate(), ref Settings.HideHatsIndoors);
+                    Widgets.Label(new Rect(0, y, 225, 22), "ShowHair.HideHatsIndoors".Translate());
+                    string label;
+                    if (Settings.Indoors == Indoors.ShowHats)
+                        label = "Off";
+                    else if (Settings.Indoors == Indoors.HideHats)
+                        label = "ShowHair.HideHatsIndoors";
+                    else
+                        label = "ShowHair.HideHatsIndoorsShowWhenDrafted";
+                    if (Widgets.ButtonText(new Rect(235, y, 200, 22), label.Translate()))
+                    {
+                        Find.WindowStack.Add(new FloatMenu(new List<FloatMenuOption>()
+                        {
+                            new FloatMenuOption("Off".Translate(), delegate() {Settings.Indoors = Indoors.ShowHats; }),
+                            new FloatMenuOption("ShowHair.HideHatsIndoors".Translate(), delegate() {Settings.Indoors = Indoors.HideHats; }),
+                            new FloatMenuOption("ShowHair.HideHatsIndoorsShowWhenDrafted".Translate(), delegate() {Settings.Indoors = Indoors.ShowHatsWhenDrafted; }),
+                        }));
+                    }
                     y += 30;
                     /*
                     {
@@ -120,19 +145,28 @@ namespace ShowHair
                                     this.RemoveApparel(t);
                             }
 
-                            this.previousHatDef = this.mouseOverThingDef;
-
-                            if (!spawnedHats.TryGetValue(this.mouseOverThingDef, out ThingWithComps thing))
+                            if (this.mouseOverThingDef != null)
                             {
-                                ThingDef stuff = GenStuff.RandomStuffFor(this.mouseOverThingDef);
-                                thing = ThingMaker.MakeThing(this.mouseOverThingDef, stuff) as ThingWithComps;
-                                thing.TryGetComp<CompQuality>()?.SetQuality(QualityUtility.GenerateQualityRandomEqualChance(), ArtGenerationContext.Colony);
-                                thing.stackCount = 1;
-                                this.spawnedHats.Add(thing.def, thing);
+                                this.previousHatDef = this.mouseOverThingDef;
+                                if (!spawnedHats.TryGetValue(this.mouseOverThingDef, out ThingWithComps thing))
+                                {
+                                    ThingDef stuff = GenStuff.RandomStuffFor(this.mouseOverThingDef);
+                                    thing = ThingMaker.MakeThing(this.mouseOverThingDef, stuff) as ThingWithComps;
+                                    thing.TryGetComp<CompQuality>()?.SetQuality(QualityUtility.GenerateQualityRandomEqualChance(), ArtGenerationContext.Colony);
+                                    thing.stackCount = 1;
+                                    this.spawnedHats.Add(thing.def, thing);
+                                }
+                                this.AddApparel(thing);
+                                try
+                                {
+                                    this.pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
+                                }
+                                catch
+                                {
+                                    Log.ErrorOnce(msgErrorDirty, msgErrorDirty.GetHashCode() + 1);
+                                }
+                                PortraitsCache.SetDirty(this.pawn);
                             }
-                            this.AddApparel(thing);
-                            this.pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
-                            PortraitsCache.SetDirty(this.pawn);
                         }
                     }
                     else
@@ -150,8 +184,14 @@ namespace ShowHair
                             this.pawnBackupHairDef = this.pawn.story.hairDef;
 
                             this.pawn.story.hairDef = this.mouseOverHairDef;
-
-                            this.pawn.Drawer.renderer.graphics.ResolveAllGraphics();
+                            try
+                            {
+                                this.pawn.Drawer.renderer.graphics.ResolveAllGraphics();
+                            }
+                            catch
+                            {
+                                Log.ErrorOnce(msgErrorDirty, msgErrorDirty.GetHashCode() + 9);
+                            }
                             PortraitsCache.SetDirty(this.pawn);
                         }
                     }
@@ -165,26 +205,63 @@ namespace ShowHair
                     Widgets.CheckboxLabeled(new Rect(650f, y + 350, 150, 30), "ShowHair.PutHatOnPawn".Translate(), ref this.putHatOnPawn);
                     if (b != this.putHatOnPawn)
                     {
-                        this.pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
+                        Stack<Apparel> toRemove = new Stack<Apparel>();
+                        foreach (Apparel a in this.pawn.apparel.WornApparel)
+                        {
+                            var layers = a.def.apparel?.layers;
+                            if (layers != null && (layers.Contains(ApparelLayerDefOf.Overhead)))
+                                toRemove.Push(a);
+                        }
+                        foreach (Apparel a in toRemove)
+                            this.pawn.apparel.Remove(a);
+                        try
+                        {
+                            this.pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
+                        }
+                        catch
+                        {
+                            Log.ErrorOnce(msgErrorDirty, msgErrorDirty.GetHashCode() + 2);
+                        }
                         PortraitsCache.SetDirty(this.pawn);
                     }
                     Widgets.Label(new Rect(600f, y + 400, 75, 30), "ShowHair.HairColor".Translate());
                     if (Widgets.ButtonText(new Rect(680, y + 400, 50, 30), "ShowHair.WhiteHairColor".Translate()))
                     {
                         this.pawn.story.hairColor = Color.white;
-                        this.pawn.Drawer.renderer.graphics.ResolveAllGraphics();
+                        try
+                        {
+                            this.pawn.Drawer.renderer.graphics.ResolveAllGraphics();
+                        }
+                        catch
+                        {
+                            Log.ErrorOnce(msgErrorDirty, msgErrorDirty.GetHashCode() + 5);
+                        }
                         PortraitsCache.SetDirty(this.pawn);
                     }
                     if (Widgets.ButtonText(new Rect(740, y + 400, 50, 30), "ShowHair.YellowHairColor".Translate()))
                     {
                         this.pawn.story.hairColor = Color.yellow;
-                        this.pawn.Drawer.renderer.graphics.ResolveAllGraphics();
+                        try
+                        {
+                            this.pawn.Drawer.renderer.graphics.ResolveAllGraphics();
+                        }
+                        catch
+                        {
+                            Log.ErrorOnce(msgErrorDirty, msgErrorDirty.GetHashCode() + 6);
+                        }
                         PortraitsCache.SetDirty(this.pawn);
                     }
                     if (Widgets.ButtonText(new Rect(800, y + 400, 50, 30), "ShowHair.GreenHairColor".Translate()))
                     {
                         this.pawn.story.hairColor = Color.green;
-                        this.pawn.Drawer.renderer.graphics.ResolveAllGraphics();
+                        try
+                        {
+                            this.pawn.Drawer.renderer.graphics.ResolveAllGraphics();
+                        }
+                        catch
+                        {
+                            Log.ErrorOnce(msgErrorDirty, msgErrorDirty.GetHashCode() + 7);
+                        }
                         PortraitsCache.SetDirty(this.pawn);
                     }
                 }
@@ -257,7 +334,14 @@ namespace ShowHair
                 if (this.pawnBackupHairDef != null)
                     this.pawn.story.hairDef = this.pawnBackupHairDef;
 
-                this.pawn.Drawer.renderer.graphics.ResolveAllGraphics();
+                try
+                {
+                    this.pawn.Drawer.renderer.graphics.ResolveAllGraphics();
+                }
+                catch
+                {
+                    Log.ErrorOnce(msgErrorDirty, msgErrorDirty.GetHashCode() + 8);
+                }
                 PortraitsCache.SetDirty(this.pawn);
             }
         }
@@ -334,7 +418,14 @@ namespace ShowHair
                         items[t] = b;
                         if (this.pawn != null)
                         {
-                            this.pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
+                            try
+                            {
+                                this.pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
+                            }
+                            catch
+                            {
+                                Log.ErrorOnce(msgErrorDirty, msgErrorDirty.GetHashCode() + 3);
+                            }
                             PortraitsCache.SetDirty(this.pawn);
                         }
                     }
@@ -387,7 +478,14 @@ namespace ShowHair
                     }
                     if (changed && this.pawn != null)
                     {
-                        this.pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
+                        try
+                        {
+                            this.pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
+                        }
+                        catch
+                        {
+                            Log.ErrorOnce(msgErrorDirty, msgErrorDirty.GetHashCode() + 4);
+                        }
                         PortraitsCache.SetDirty(this.pawn);
                     }
                     Text.Font = GameFont.Small;
@@ -417,16 +515,22 @@ namespace ShowHair
         OnlyDraftHHSB
     }
 
+    public enum Indoors
+    {
+        ShowHats,
+        HideHats,
+        ShowHatsWhenDrafted
+    }
+
     class Settings : ModSettings
     {
         public static bool OnlyApplyToColonists = false;
         public static bool HideAllHats = false;
         public static bool ShowHatsOnlyWhenDrafted = false;
-        public static bool HideHatsIndoors = false;
         public static bool ShowHatsWhenDraftedIndoors = false;
         public static bool UpdatePortrait = false;
         public static bool OptionsOpen = false;
-        public static bool HideHatsNaturalRoof = false;
+        public static Indoors Indoors = Indoors.ShowHats;
 
         public static bool UseDontShaveHead = true;
 
@@ -501,8 +605,14 @@ namespace ShowHair
             Scribe_Values.Look<bool>(ref OnlyApplyToColonists, "OnlyApplyToColonists", false, false);
             Scribe_Values.Look<bool>(ref ShowHatsOnlyWhenDrafted, "ShowHatsOnlyWhenDrafted", false, false);
             Scribe_Values.Look<bool>(ref ShowHatsWhenDraftedIndoors, "ShowHatsWhenDraftedIndoors", false, false);
-            Scribe_Values.Look<bool>(ref HideHatsNaturalRoof, "HideHatsNaturalRoof", false, false);
-            Scribe_Values.Look<bool>(ref HideHatsIndoors, "HideHatsIndoors", false, false);
+            Scribe_Values.Look<Indoors>(ref Indoors, "Indoors", Indoors.ShowHats, false);
+            if (Scribe.mode != LoadSaveMode.Saving)
+            {
+                bool b = false;
+                Scribe_Values.Look<bool>(ref b, "HideHatsIndoors", false, false);
+                if (b)
+                    Indoors = Indoors.HideHats;
+            }
             Scribe_Values.Look<bool>(ref UpdatePortrait, "UpdatePortrait", false, false);
             Scribe_Values.Look<bool>(ref UseDontShaveHead, "UseDontShaveHead", true, false);
 
