@@ -4,8 +4,6 @@
   <ShowHair.HideAllHats>帽子を全て隠す</ShowHair.HideAllHats>
   <ShowHair.ShowHatsOnlyWhenDrafted>徴兵された時だけ帽子を表示する</ShowHair.ShowHatsOnlyWhenDrafted>
   <ShowHair.OnlyApplyToColonists>入植者にだけ適用する</ShowHair.OnlyApplyToColonists>
-  <ShowHair.HideHatsIndoors>屋内で帽子を隠す</ShowHair.HideHatsIndoors>
-  <ShowHair.HideHatsIndoorsShowWhenDrafted>徴兵された時に帽子を表示する</ShowHair.HideHatsIndoorsShowWhenDrafted>
   <ShowHair.UpdatePortrait>入植者一覧も更新（FPSが低下する可能性）</ShowHair.UpdatePortrait>
   <ShowHair.ShowHatsUnderNaturalRoof>岩天井の下で帽子を隠す</ShowHair.ShowHatsUnderNaturalRoof>
   <ShowHair.PutHatOnPawn>ポーンが被った状態</ShowHair.PutHatOnPawn>
@@ -26,6 +24,8 @@
   <OnlyDraftHH>徴兵時髪隠す</OnlyDraftHH>
   <OnlyDraftHHSB>徴兵時|HH|SB</OnlyDraftHHSB>
   <ShowHair.HairThatWillBeHidden>帽子が隠す髪</ShowHair.HairThatWillBeHidden>
+  <ShowHair.HideHatsIndoors>屋内で帽子を隠す</ShowHair.HideHatsIndoors>
+  <ShowHair.HideHatsIndoorsShowWhenDrafted>徴兵された時に帽子を表示する</ShowHair.HideHatsIndoorsShowWhenDrafted>
 
   <ShowHair.UseDontShaveHead>Don't Shave Your Hairの髪を使う</ShowHair.UseDontShaveHead>
 
