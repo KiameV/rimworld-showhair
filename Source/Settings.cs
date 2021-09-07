@@ -365,7 +365,45 @@ namespace ShowHair
             Text.Font = GameFont.Small;
             const float ROW_HEIGHT = 32;
             GUI.BeginGroup(new Rect(x, y, width, 400));
-            Widgets.Label(new Rect(0, 0, width, 20), header.Translate());
+            Widgets.Label(new Rect(0, 0, width - 100, 20), header.Translate());
+            if (items2 != null)
+            {
+                if (Widgets.ButtonText(new Rect(width - 100, 0, 100, 24), ((searchBuffer != "") ? "ShowHair.SetFiltered" : "ShowHair.SetAll").Translate()))
+                {
+                    string sb = searchBuffer;
+                    Find.WindowStack.Add(new FloatMenu(new List<FloatMenuOption>()
+                    {
+                        new FloatMenuOption(HatHideEnum.ShowsHair.ToString().Translate(), () =>
+                        {
+                            this.SetHatHideEnum(sb, items2, HatHideEnum.ShowsHair);
+                        }),
+                        new FloatMenuOption(HatHideEnum.HideHat.ToString().Translate(), () =>
+                        {
+                            this.SetHatHideEnum(sb, items2, HatHideEnum.HideHat);
+                        }),
+                        new FloatMenuOption(HatHideEnum.HidesAllHair.ToString().Translate(), () =>
+                        {
+                            this.SetHatHideEnum(sb, items2, HatHideEnum.HidesAllHair);
+                        }),
+                        new FloatMenuOption(HatHideEnum.HidesHairShowBeard.ToString().Translate(), () =>
+                        {
+                            this.SetHatHideEnum(sb, items2, HatHideEnum.HidesHairShowBeard);
+                        }),
+                        new FloatMenuOption(HatHideEnum.OnlyDraftSH.ToString().Translate(), () =>
+                        {
+                            this.SetHatHideEnum(sb, items2, HatHideEnum.OnlyDraftSH);
+                        }),
+                        new FloatMenuOption(HatHideEnum.OnlyDraftHH.ToString().Translate(), () =>
+                        {
+                            this.SetHatHideEnum(sb, items2, HatHideEnum.OnlyDraftHH);
+                        }),
+                        new FloatMenuOption(HatHideEnum.OnlyDraftHHSB.ToString().Translate(), () =>
+                        {
+                            this.SetHatHideEnum(sb, items2, HatHideEnum.OnlyDraftHHSB);
+                        }),
+                    }));
+                }
+            }
             Text.Font = GameFont.Tiny;
             Widgets.Label(new Rect(0, 20, width - 65, 20), headerDesc.Translate());
             Text.Font = GameFont.Small;
@@ -381,7 +419,7 @@ namespace ShowHair
             int index = 0;
             foreach (T t in labels)
             {
-                if (searchBuffer != "" && !t.label.ToLower().Contains(searchBuffer))
+                if (!this.MatchesSearch(searchBuffer, t))
                     continue;
 
                 innerY = index * ROW_HEIGHT;
@@ -428,6 +466,7 @@ namespace ShowHair
                             }
                             PortraitsCache.SetDirty(this.pawn);
                         }
+                        break;
                     }
                 }
                 else if (items2 != null)
@@ -441,17 +480,17 @@ namespace ShowHair
                             new FloatMenuOption(HatHideEnum.ShowsHair.ToString().Translate(), () =>
                             {
                                 items2[t] = HatHideEnum.ShowsHair;
-                                changed = true; 
+                                changed = true;
                             }),
                             new FloatMenuOption(HatHideEnum.HideHat.ToString().Translate(), () =>
                             {
                                 items2[t] = HatHideEnum.HideHat;
-                                changed = true; 
+                                changed = true;
                             }),
                             new FloatMenuOption(HatHideEnum.HidesAllHair.ToString().Translate(), () =>
                             { 
                                 items2[t] = HatHideEnum.HidesAllHair;
-                                changed = true; 
+                                changed = true;
                             }),
                             new FloatMenuOption(HatHideEnum.HidesHairShowBeard.ToString().Translate(), () =>
                             {
@@ -461,12 +500,12 @@ namespace ShowHair
                             new FloatMenuOption(HatHideEnum.OnlyDraftSH.ToString().Translate(), () =>
                             {
                                 items2[t] = HatHideEnum.OnlyDraftSH;
-                                changed = true; 
+                                changed = true;
                             }),
                             new FloatMenuOption(HatHideEnum.OnlyDraftHH.ToString().Translate(), () =>
                             {
                                 items2[t] = HatHideEnum.OnlyDraftHH;
-                                changed = true; 
+                                changed = true;
                             }),
                             new FloatMenuOption(HatHideEnum.OnlyDraftHHSB.ToString().Translate(), () =>
                             {
@@ -494,6 +533,22 @@ namespace ShowHair
             Widgets.EndScrollView();
             GUI.EndGroup();
             innerY += ROW_HEIGHT;
+        }
+
+        private bool MatchesSearch<T>(string searchBuffer, T t) where T : Def
+        {
+            return searchBuffer == "" || t.label.ToLower().Contains(searchBuffer);
+        }
+
+        private void SetHatHideEnum<T>(string searchBuffer, Dictionary<T, HatHideEnum> items, HatHideEnum v) where T : Def
+        {
+            foreach (T t in new List<T>(items.Keys))
+            {
+                if (this.MatchesSearch(searchBuffer, t))
+                {
+                    items[t] = v;
+                }
+            }
         }
 
         private bool IsSelected(Def def)

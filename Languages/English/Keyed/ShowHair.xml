@@ -26,8 +26,10 @@
 	<ShowHair.HairThatWillBeHidden>Hair That Hats Will Hide</ShowHair.HairThatWillBeHidden>
 	<ShowHair.HideHatsIndoors>Hide Hats Indoors</ShowHair.HideHatsIndoors>
 	<ShowHair.HideHatsIndoorsShowWhenDrafted>Show Hats When Drafted</ShowHair.HideHatsIndoorsShowWhenDrafted>
-	
 	<ShowHair.UseDontShaveHead>Use "Don't Shave Your Hair" hairs</ShowHair.UseDontShaveHead>
+	
+	<ShowHair.SetAll>Set All</ShowHair.SetAll>
+	<ShowHair.SetFiltered>Set Filtered</ShowHair.SetFiltered>
 	
 	<!-- 1.2 and older -->
 	<ShowHair.SelectHatsWhichHideHair>Select hats that will hide hair</ShowHair.SelectHatsWhichHideHair>
