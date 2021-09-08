@@ -26,8 +26,10 @@
   <ShowHair.HairThatWillBeHidden>帽子が隠す髪</ShowHair.HairThatWillBeHidden>
   <ShowHair.HideHatsIndoors>屋内で帽子を隠す</ShowHair.HideHatsIndoors>
   <ShowHair.HideHatsIndoorsShowWhenDrafted>徴兵された時に帽子を表示する</ShowHair.HideHatsIndoorsShowWhenDrafted>
-
   <ShowHair.UseDontShaveHead>Don't Shave Your Hairの髪を使う</ShowHair.UseDontShaveHead>
+
+  <ShowHair.SetAll>すべてを設定</ShowHair.SetAll>
+  <ShowHair.SetFiltered>フィルターを設定</ShowHair.SetFiltered>
 
   <!-- 1.2 and older -->
   <ShowHair.SelectHatsWhichHideHair>着用時に髪を隠す帽子を選択</ShowHair.SelectHatsWhichHideHair>
